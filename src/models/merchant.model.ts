@@ -1,6 +1,6 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import { Document, Schema, model } from 'mongoose';
 
-export interface MerchantDocumentInterface extends Document {
+export interface MerchantInterface extends Document {
   /** Nombre del Merchant. */
   name: string;
   /** Tipo de Merchant (por ejemplo, vendedor de armas, alquimista, etc.). */
@@ -9,7 +9,7 @@ export interface MerchantDocumentInterface extends Document {
   location: string;
 }
 
-const MerchantSchema = new Schema<MerchantDocumentInterface>({
+const MerchantSchema = new Schema<MerchantInterface>({
   name: {
     type: String,
     required: true,
@@ -33,4 +33,4 @@ const MerchantSchema = new Schema<MerchantDocumentInterface>({
   },
 })
 
-export default mongoose.model<MerchantDocumentInterface>('Merchant', MerchantSchema);
+export const Merchant = model<MerchantInterface>('Merchant', MerchantSchema);

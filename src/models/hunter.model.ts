@@ -1,12 +1,12 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import { Document, Schema, model } from 'mongoose';
 
-export interface HunterDocumentInterface extends Document {
+export interface HunterInterface extends Document {
   name: string;
   type: 'weapons dealer' | 'alchemist' | 'wizard' | 'hunter';
   location: string;
 }
 
-const HunterSchema = new Schema<HunterDocumentInterface>({
+const HunterSchema = new Schema<HunterInterface>({
   name: { 
     type: String, 
     required: true,  
@@ -26,4 +26,4 @@ const HunterSchema = new Schema<HunterDocumentInterface>({
   },
 })
 
-export default mongoose.model<HunterDocumentInterface>('Hunter', HunterSchema);
+export const Hunter = model<HunterInterface>('Hunter', HunterSchema);

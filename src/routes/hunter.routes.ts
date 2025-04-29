@@ -1,5 +1,5 @@
   import express from 'express';
-  import Hunter from '../models/hunter.model.js';
+  import { Hunter } from '../models/hunter.model.js';
 
   export const hunterRouter = express.Router();
 

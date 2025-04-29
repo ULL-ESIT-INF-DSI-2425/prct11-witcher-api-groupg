@@ -1,5 +1,5 @@
 import express from 'express';
-import Merchant from '../models/merchant.model.js;
+import { Merchant } from '../models/merchant.model.js';
 
 export const hunterRouter = express.Router();
 
