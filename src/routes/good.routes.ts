@@ -2,24 +2,19 @@ import express from "express";
 import "./db/mongoose.js";
 import { Good } from "../models/good.model.js";
 
-const app = express();
-const port = process.env.PORT || 3000;
+const goodRouter = express.Router();
 
-app.use(express.json());
-
-app.post("/goods", (req, res) => {
+goodRouter.post("/goods", async (req, res) => {
   const good = new Good(req.body);
-  good
-    .save()
-    .then((good) => {
-      res.status(201).send(good);
-    })
-    .catch((error) => {
-      res.status(400).send(error);
-    });
+  try {
+    await good.save();
+    res.status(201).send(good);
+  } catch (error) {
+    res.status(500).send(error);
+  }
 });
 
-app.get("/goods", (req, res) => {
+goodRouter.get("/goods", async (req, res) => {
   const filter_name = req.query.name ? { name: req.query.name.toString() } : {};
   const filter_description = req.query.description
     ? { description: req.query.description.toString() }
@@ -32,70 +27,70 @@ app.get("/goods", (req, res) => {
     ...filter_description,
     ...filter_material,
   };
-  Good.find(filter)
-    .then((goods) => {
-      if (goods.length !== 0) {
-        res.send(goods);
-      } else {
-        res.status(404).send();
-      }
-    })
-    .catch(() => {
-      res.status(500).send();
-    });
+  try {
+    const goods = await Good.find(filter);
+    if (goods.length !== 0) {
+      res.send(goods);
+    } else {
+      res.status(404).send();
+    }
+  } catch (error) {
+    res.status(500).send(error);
+  }
 });
 
-app.get("/goods/:id", (req, res) => {
-  Good.findById(req.params.id)
-    .then((good) => {
-      if (!good) {
-        res.status(404).send();
-      } else {
-        res.send(good);
-      }
-    })
-    .catch(() => {
-      res.status(500).send();
-    });
+goodRouter.get("/goods/:id", async (req, res) => {
+  const goodId = req.params.id;
+  try {
+    const good = await Good.findById(goodId);
+    if (!good) {
+      res.status(404).send();
+    }
+    res.status(200).send(good);
+  } catch (error) {
+    res.status(500).send(error);
+  }
 });
 
-app.patch('/goods', (req, res) => {
+goodRouter.patch('/goods', async (req, res) => {
   if (!req.query.id) {
     res.status(400).send({
       error: 'An id must be provided in the query string',
-    });
-  } else if (!req.body) {
-    res.status(400).send({
-      error: 'Fields to be modified have to be provided in the request body',
     });
   } else {
     const allowedUpdates = ['name', 'description', 'material', 'weight', 'value'];
     const actualUpdates = Object.keys(req.body);
     const isValidUpdate =
       actualUpdates.every((update) => allowedUpdates.includes(update));
-
     if (!isValidUpdate) {
       res.status(400).send({
         error: 'Update is not permitted',
       });
     } else {
-      Good.findOneAndUpdate({id: req.query.id.toString()}, req.body, {
-        new: true,
-        runValidators: true,
-      }).then((good) => {
+      try {
+        const good = await Good.findOneAndUpdate(
+          {
+            id: req.query.id.toString()
+          }, 
+          req.body, 
+          {
+            new: true,
+            runValidators: true,
+          },
+        );
         if (!good) {
           res.status(404).send();
         } else {
           res.send(good);
         }
-      }).catch((error) => {
-        res.status(400).send(error);
-      });
+      } catch (error) {
+        res.status(500).send(error);
+      }
     }
   }
 });
 
-app.patch("/goods/:id", (req, res) => {
+goodRouter.patch("/goods/:id", async (req, res) => {
   const allowedUpdates = ["name", "description", "material", "weight", "value"];
   const actualUpdates = Object.keys(req.body);
   const isValidUpdate =
@@ -106,24 +101,29 @@ app.patch("/goods/:id", (req, res) => {
       error: "Update is not permitted",
     });
   } else {
-    Good.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    })
-      .then((good) => {
-        if (!good) {
-          res.status(404).send();
-        } else {
-          res.send(good);
-        }
-      })
-      .catch(() => {
-        res.status(400).send();
-      });
+    try {
+      const good = await Good.findOneAndUpdate(
+        {
+          id: req.params.id.toString(),
+        }, 
+        req.body, 
+        {
+          new: true,
+          runValidators: true,
+        },
+      );
+      if (!good) {
+        res.status(404).send();
+      } else {
+        res.send(good);
+      }
+    } catch (error) {
+      res.status(500).send(error);
+    }
   }
 });
 
-app.delete("/goods", (req, res) => {
+goodRouter.delete("/goods", async (req, res) => {
   const filter_name = req.query.name ? { name: req.query.name.toString() } : {};
   const filter_description = req.query.description
     ? { description: req.query.description.toString() }
@@ -136,29 +136,24 @@ app.delete("/goods", (req, res) => {
     ...filter_description,
     ...filter_material,
   };
-  Good.find(filter)
-    .then((goods) => {
-      if (goods.length === 0) {
-        res.status(404).send({ error: "No goods found" });
-      } else {
-        Good.deleteMany(filter)
-          .then((result) => {
-            res.send({
-              deletedCount: result.deletedCount,
-              deletedGoods: goods,
-            });
-          })
-          .catch(() => {
-            res.status(500).send();
-          });
-      }
-    })
-    .catch(() => {
-      res.status(500).send();
-    });
+
+  try {
+    const goods = await Good.find(filter);
+    if (goods.length === 0) {
+      res.status(404).send({ error: "No goods found" });
+    } else {
+      const result = await Good.deleteMany(filter);
+      res.send({
+        deletedCount: result.deletedCount,
+        deletedGoods: goods,
+      });
+    }
+  } catch (error) {
+    res.status(500).send(error);
+  }
 });
 
-app.delete("/goods/:id", (req, res) => {
+goodRouter.delete("/goods/:id", async (req, res) => {
   Good.findByIdAndDelete(req.params.id)
     .then((good) => {
       if (!good) {
@@ -172,10 +167,4 @@ app.delete("/goods/:id", (req, res) => {
     });
 });
 
-app.all("/{*splat}", (_, res) => {
-  res.status(501).send();
-});
-
-app.listen(port, () => {
-  console.log(`Server is up on port ${port}`);
-});
+export default goodRouter;

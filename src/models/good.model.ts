@@ -1,6 +1,6 @@
 import { Document, Schema, model } from 'mongoose';
 
-interface GoodInterface extends Document {
+export interface GoodInterface extends Document {
   name: string;
   description: string;
   material: string;

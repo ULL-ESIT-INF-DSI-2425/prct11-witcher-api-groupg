@@ -7,7 +7,7 @@
     "dev": "tsc-watch",
     "doc": "typedoc",
     "test": "vitest run",
-    "coverage": "vitest run --coverage --coverage.include src/**/*"
+    "coverage": "vitest run --coverage --coverage.include '**/src/*'"
   },
   "repository": {
     "type": "git",

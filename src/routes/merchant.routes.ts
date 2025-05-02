@@ -1,144 +1,162 @@
-import express from 'express';
-import { Merchant } from '../models/merchant.model.js';
+import express from "express";
+import "./db/mongoose.js";
+import { Merchant } from "../models/merchant.model.js";
 
-export const hunterRouter = express.Router();
+export const merchantRouter = express.Router();
 
-hunterRouter.post('/hunter', (req, res) => {
-  const hunter = new Hunter(req.body);
-  hunter.save(req.body).then((hunter) => {
-    res.status(201).send(hunter);
-  }).catch((error) => {
+merchantRouter.post("/merchant", async (req, res) => {
+  const merchant = new Merchant(req.body);
+  try {
+    await merchant.save();
+    res.status(201).send(merchant);
+  } catch (error) {
     res.status(400).send(error);
-  });
+  }
 });
 
-hunterRouter.get('/hunter', (req, res) => {
-  const {name, type, location} = req.query;
+merchantRouter.get("/merchant", async (req, res) => {
+  const filter_name = req.query.name ? { name: req.query.name.toString() } : {};
+  const filter_type = req.query.type ? { type: req.query.type.toString() } : {};
+  const filter_location = req.query.location
+    ? { location: req.query.location.toString() }
+    : {};
 
-  if (!name && !type && !location) {
-    res.status(400).send({ error: 'No query parameters provided' });
-  }
-  const filter: Record<string, string> = {};
-  if (name) {
-    filter.name = name.toString();
-  }
-  if (type) {
-    filter.type = type.toString();
-  }
-  if (location) {
-    filter.location = location.toString();
-  }
-  Hunter.find(filter)
-    .then((hunters) => {
-      if (hunters.length !== 0) res.status(404).send({ error: 'No hunters found' });
-        res.status(200).send(hunters);
-    })
-    .catch((error) => res.status(400).send({ error: error.message }));
-});
+  const filter = {
+    ...filter_name,
+    ...filter_type,
+    ...filter_location,
+  };
 
-hunterRouter.get('/hunter/:id', (req, res) => {
-  const _id = req.params.id;
-  Hunter.findById(_id).then((hunter) => {
-    if (!hunter) {
-      return res.status(404).send();
+  try {
+    const merchant = await Merchant.find(filter);
+    if (merchant.length === 0) {
+      res.status(404).send({ error: "No merchant found" });
     }
-    res.status(200).send(hunter);
-  }).catch((error) => {
-    res.status(400).send(error);
-  });
+    res.status(200).send(merchant);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
 });
 
-hunterRouter.patch('/hunter', (req, res) => {
-  const {name, type, location} = req.query;
-  if (!name && !type && !location) {
-    res.status(400).send({ error: 'No query parameters provided' });
-  }
-  const filter: Record<string, string> = {};
-  if (name) {
-    filter.name = name.toString();
-  }
-  if (type) {
-    filter.type = type.toString();
-  }
-  if (location) {
-    filter.location = location.toString();
-  }
-  const allowedUpdates = ['name', 'type', 'location'];
-  const updates = Object.keys(req.body);
-  const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
-  if (!isValidOperation) {
-    res.status(400).send({ error: 'Invalid updates!' });
-  }
-  Hunter.updateMany(filter, req.body, { new: true, runValidators: true }).then((result) => {
-    if (result.matchedCount === 0) {
-      res.status(404).send({ error: 'No hunters found' });
-    }
-    res.status(200).send({ message: 'Hunters updated successfully' });
-  }).catch((error) => {
-    res.status(400).send(error);
-  });
-});
-
-hunterRouter.patch('/hunter/:id', (req, res) => {
+merchantRouter.get("/merchant/:id", async (req, res) => {
   const _id = req.params.id;
-  const allowedUpdates = ['name', 'type', 'location'];
-  const updates = Object.keys(req.body);
-  const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
 
-  if (!isValidOperation) {
-    res.status(400).send({ error: 'Invalid updates!' });
-  }
-
-  Hunter.findByIdAndUpdate(_id, req.body, { new: true, runValidators: true }).then((hunter) => {
-    if (!hunter) {
+  try {
+    const merchant = await Merchant.findById(_id);
+    if (!merchant) {
       res.status(404).send();
     }
-    res.status(200).send(hunter);
-  }).catch((error) => {
+    res.status(200).send(merchant);
+  } catch (error) {
     res.status(400).send(error);
-  });
+  }
 });
 
-hunterRouter.delete('/hunter', (req, res) => {
-  const {name, type, location} = req.query;
-  if (!name && !type && !location) {
-    res.status(400).send({ error: 'No query parameters provided' });
-  }
-  const filter: Record<string, string> = {};
-  if (name) {
-    filter.name = name.toString();
-  }
-  if (type) {
-    filter.type = type.toString();
-  }
-  if (location) {
-    filter.location = location.toString();
-  }
-  Hunter.deleteMany(filter).then((result) => {
-    if (result.deletedCount === 0) {
-      res.status(404).send({ error: 'No hunters found' });
+merchantRouter.patch("/merchant", async (req, res) => {
+  if (!req.query.id) {
+    res.status(400).send({
+      error: 'An id must be provided in the query string',
+    });
+  } else {
+    const allowedUpdates = ['name', 'description', 'material', 'weight', 'value'];
+    const actualUpdates = Object.keys(req.body);
+    const isValidUpdate =
+      actualUpdates.every((update) => allowedUpdates.includes(update));
+    if (!isValidUpdate) {
+      res.status(400).send({
+        error: 'Update is not permitted',
+      });
+    } else {
+      try {
+        const merchant = await Merchant.findOneAndUpdate(
+          {
+            id: req.query.id.toString()
+          }, 
+          req.body, 
+          {
+            new: true,
+            runValidators: true,
+          },
+        );
+        if (!merchant) {
+          res.status(404).send();
+        } else {
+          res.send(merchant);
+        }
+      } catch (error) {
+        res.status(500).send(error);
+      }
     }
-    res.status(200).send({ message: 'Hunters deleted successfully' });
-  }).catch((error) => {
-    res.status(400).send(error);
-  });
+  }
 });
 
-hunterRouter.delete('/hunter/:id', (req, res) => {
+merchantRouter.patch("/merchant/:id", async (req, res) => {
   const _id = req.params.id;
-  Hunter.findByIdAndDelete(_id).then((hunter) => {
-    if (!hunter) {
-      return res.status(404).send();
+
+  const allowedUpdates = ['name', 'type', 'location'];
+  const updates = Object.keys(req.body);
+  const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
+
+  if (!isValidOperation) {
+    res.status(400).send({ error: 'Invalid updates!' });
+  }
+
+  try {
+    const merchant = await Merchant.findByIdAndUpdate(_id, req.body, { new: true, runValidators: true });
+    if (!merchant) {
+      res.status(404).send();
     }
-    res.status(200).send(hunter);
-  }).catch((error) => {
+    res.status(200).send(merchant);
+  } catch (error) {
     res.status(400).send(error);
-  });
+  }
 });
 
-hunterRouter.all('/hunter/{*splat}', (_, res) => {
+merchantRouter.delete("/merchant", async (req, res) => {
+  const filter_name = req.query.name ? { name: req.query.name.toString() } : {};
+  const filter_type = req.query.type ? { type: req.query.type.toString() } : {};
+  const filter_location = req.query.location
+    ? { location: req.query.location.toString() }
+    : {};
+
+  const filter = {
+    ...filter_name,
+    ...filter_type,
+    ...filter_location,
+  };
+
+  try {
+    const merchant = await Merchant.find(filter);
+    if (merchant.length === 0) {
+      res.status(404).send({ error: "No goods found" });
+    } else {
+      const result = await Merchant.deleteMany(filter);
+      res.send({
+        deletedCount: result.deletedCount,
+        deletedGoods: merchant,
+      });
+    }
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+merchantRouter.delete("/merchant/:id", async (req, res) => {
+  const _id = req.params.id;
+
+  try {
+    const merchant = await Merchant.findByIdAndDelete(_id);
+    if (!merchant) {
+      res.status(404).send();
+    }
+    res.status(200).send(merchant);
+  } catch (error) {
+    res.status(400).send(error);
+  }
+});
+
+merchantRouter.all("/merchant/{*splat}", (_, res) => {
   res.status(501).send();
 });
 
-
-export default hunterRouter;
+export default merchantRouter;
