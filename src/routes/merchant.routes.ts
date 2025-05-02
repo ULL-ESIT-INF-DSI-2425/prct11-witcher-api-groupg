@@ -143,7 +143,6 @@ merchantRouter.delete("/merchant", async (req, res) => {
 
 merchantRouter.delete("/merchant/:id", async (req, res) => {
   const _id = req.params.id;
-
   try {
     const merchant = await Merchant.findByIdAndDelete(_id);
     if (!merchant) {
@@ -153,10 +152,6 @@ merchantRouter.delete("/merchant/:id", async (req, res) => {
   } catch (error) {
     res.status(400).send(error);
   }
-});
-
-merchantRouter.all("/merchant/{*splat}", (_, res) => {
-  res.status(501).send();
 });
 
 export default merchantRouter;

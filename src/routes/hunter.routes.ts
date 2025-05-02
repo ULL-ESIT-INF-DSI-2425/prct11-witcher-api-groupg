@@ -147,27 +147,6 @@ hunterRouter.delete("/hunter", async (req, res) => {
   } catch (error) {
     res.status(500).send(error);
   }
-
-    Hunter.find(filter)
-      .then((hunters) => {
-        if (hunters.length === 0) {
-          res.status(404).send({ error: "No hunters found" });
-        } else {
-          Hunter.deleteMany(filter)
-            .then((result) => {
-              res.send({
-                deletedCount: result.deletedCount,
-                deletedHunters: hunters,
-              });
-            })
-            .catch(() => {
-              res.status(500).send();
-            });
-        }
-      })
-      .catch(() => {
-        res.status(500).send();
-      });
 });
 
 hunterRouter.delete("/hunter/:id", async (req, res) => {
@@ -182,10 +161,6 @@ hunterRouter.delete("/hunter/:id", async (req, res) => {
   } catch (error) {
     res.status(400).send(error);
   }
-});
-
-hunterRouter.all("/hunter/{*splat}", (_, res) => {
-  res.status(501).send();
 });
 
 export default hunterRouter;

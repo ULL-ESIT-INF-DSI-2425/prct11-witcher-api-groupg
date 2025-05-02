@@ -5,11 +5,13 @@ export interface GoodInterface extends Document {
   description: string;
   material: string;
   weight: number;
+  quantity: number;
   value: number;
 }
 
 const GoodSchema = new Schema<GoodInterface>({
   name: {
+    unique: true,
     type: String,
     required: true,
     trim: true,
@@ -25,6 +27,10 @@ const GoodSchema = new Schema<GoodInterface>({
     trim: true,
   },
   weight: {
+    type: Number,
+    required: true,
+  },
+  quantity: {
     type: Number,
     required: true,
   },

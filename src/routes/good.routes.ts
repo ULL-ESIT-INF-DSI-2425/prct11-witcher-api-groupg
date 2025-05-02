@@ -154,17 +154,16 @@ goodRouter.delete("/goods", async (req, res) => {
 });
 
 goodRouter.delete("/goods/:id", async (req, res) => {
-  Good.findByIdAndDelete(req.params.id)
-    .then((good) => {
-      if (!good) {
-        res.status(404).send();
-      } else {
-        res.send(good);
-      }
-    })
-    .catch(() => {
-      res.status(400).send();
-    });
+  try { 
+    const good = await Good.findByIdAndDelete(req.params.id);
+    if (!good) {
+      res.status(404).send();
+    } else {
+      res.send(good);
+    }
+  } catch (error) {
+    res.status(400).send();
+  }
 });
 
 export default goodRouter;
