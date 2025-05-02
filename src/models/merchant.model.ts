@@ -14,6 +14,7 @@ const MerchantSchema = new Schema<MerchantInterface>({
     type: String,
     required: true,
     trim: true,
+    unique: true,
     validate: (value: string) => {
       if (!value.match(/^[A-Z]/)) {
         throw new Error('Note name must start with a capital letter');
