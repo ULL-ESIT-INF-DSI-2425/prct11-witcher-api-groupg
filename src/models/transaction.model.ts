@@ -1,23 +1,30 @@
 import { Document, Schema, model } from "mongoose";
-import { GoodInterface } from "./good.model.js";
-import { HunterInterface } from "./hunter.model.js";
-import { MerchantInterface } from "./merchant.model.js";
+import { Good } from "./good.model.js";
+import { Hunter } from "./hunter.model.js";
+import { Merchant } from "./merchant.model.js";
 
 interface TransactionInterface extends Document {
-  goodIds: GoodInterface["id"][];
-  involvedId: HunterInterface["id"] | MerchantInterface["id"];
-  involvedType: string;
-  type:string;
+  goodDetails: { goodId: string; quantity: number }[];
+  involvedId: Schema.Types.ObjectId;
+  involvedType: "Hunter" | "Merchant";
+  type: "Buy" | "Sell";
   date: Date;
   amount: number;
 }
 
 const TransactionSchema = new Schema<TransactionInterface>({
-  goodIds: [
+  goodDetails: [
     {
-      type: Schema.Types.ObjectId,
-      ref: "Good",
-      required: true,
+      goodId: {
+        type: Schema.Types.ObjectId,
+        ref: "Good",
+        required: true,
+      },
+      quantity: {
+        type: Number,
+        required: true,
+        min: 1,
+      },
     },
   ],
   involvedId: {
@@ -36,41 +43,50 @@ const TransactionSchema = new Schema<TransactionInterface>({
     enum: ["Buy", "Sell"],
   },
   date: {
-    trim: true,
-    required: true,
     type: Date,
     default: Date.now,
+    trim: true,
+    required: true,
   },
   amount: {
     type: Number,
-    required: true,
     trim: true,
+    required: true,
   },
 });
 
+// Middleware para calcular el importe total antes de guardar
 TransactionSchema.pre("save", async function (next) {
-  const transaction = this as any;
-  if (transaction.involvedType === "Merchant") {
-    transaction.type = "Buy";
-  } else if (transaction.involvedType === "Hunter") {
-    transaction.type = "Sell";
-  } else {
-    throw new Error("Invalid  involved type")
+  const transaction = this as TransactionInterface;
+
+  // Verificar existencia de cazador/mercader
+  const involved =
+    transaction.involvedType === "Hunter"
+      ? await Hunter.findById(transaction.involvedId)
+      : await Merchant.findById(transaction.involvedId);
+
+  if (!involved) {
+    throw new Error(`${transaction.involvedType} no encontrado`);
   }
+
+  // Calcular el importe total
+  let totalAmount = 0;
+  for (const detail of transaction.goodDetails) {
+    const good = await Good.findById(detail.goodId);
+    if (!good) {
+      throw new Error(`Bien con ID ${detail.goodId} no encontrado`);
+    }
+    if (transaction.type === "Sell" && good.quantity < detail.quantity) {
+      throw new Error(`Stock insuficiente para el bien ${good.name}`);
+    }
+    totalAmount += good.value * detail.quantity;
+  }
+  transaction.amount = totalAmount;
+
   next();
 });
 
-TransactionSchema.statics.calculateAmount = async function (transactionId: string): Promise<number> {
-  const transaction = await this.findById(transactionId).populate("goodIds", "value");
-  if (!transaction) {
-    throw new Error("Transaction not found");
-  }
-
-  const totalAmount = transaction.goodIds.reduce((sum: number, good: any) => sum + good.price, 0);
-  return totalAmount;
-};
-
 export const Transaction = model<TransactionInterface>(
   "Transaction",
-  TransactionSchema,
+  TransactionSchema
 );
