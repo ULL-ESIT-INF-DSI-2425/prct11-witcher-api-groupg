@@ -1,5 +1,4 @@
 import express from "express";
-import "./db/mongoose.js";
 import { Merchant } from "../models/merchant.model.js";
 
 export const merchantRouter = express.Router();
