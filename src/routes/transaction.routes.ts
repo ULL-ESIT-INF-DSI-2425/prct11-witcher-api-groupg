@@ -128,7 +128,13 @@ transactionRouter.get("/transactions/involved/:name", async (req, res) => {
 
   try {
     const hunter = await Hunter.findOne({ name });
+    if (!hunter) {
+      throw new Error("Hunter not found");
+    }
     const merchant = await Merchant.findOne({ name });
+    if (!merchant) {
+      throw new Error("Merchant not found");
+    }
 
     if (!hunter && !merchant) {
       res.status(404).send({ error: "Cazador o mercader no encontrado" });

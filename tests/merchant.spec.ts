@@ -113,6 +113,7 @@ describe("PATCH /merchant/:id", () => {
 describe("DELETE /merchant/:id", () => {
   test("Should delete a merchant by ID", async () => {
     const merchant = await Merchant.findOne({ name: "Hattori" });
+    expect(merchant).not.toBe(null);
     await request(app).delete(`/merchant/${merchant!._id}`).expect(200);
 
     const deletedMerchant = await Merchant.findById(merchant!._id);

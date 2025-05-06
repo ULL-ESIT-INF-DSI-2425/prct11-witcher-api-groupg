@@ -17,7 +17,11 @@ merchantRouter.post("/merchant", async (req, res) => {
     await merchant.save();
     res.status(201).send(merchant);
   } catch (error) {
-    res.status(400).send(error);
+    if (error.code === 11000) {
+      res.status(400).send({ error: "Duplicate key error: Merchant name must be unique" });
+    } else {
+      res.status(400).send(error);
+    }
   }
 });
 
