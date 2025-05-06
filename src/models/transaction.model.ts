@@ -55,7 +55,9 @@ const TransactionSchema = new Schema<TransactionInterface>({
   },
 });
 
-// Middleware para calcular el importe total antes de guardar
+/**
+ * Middleware para calcular el importe total antes de guardar
+ */
 TransactionSchema.pre("save", async function (next) {
   const transaction = this as TransactionInterface;
 

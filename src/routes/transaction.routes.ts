@@ -6,7 +6,9 @@ import { Merchant } from "../models/merchant.model.js";
 
 const transactionRouter = express.Router();
 
-// Crear una transacción
+/**
+ * Crear una transacción
+ */ 
 transactionRouter.post("/transactions", async (req, res) => {
   const { involvedId, involvedType, goodDetails } = req.body;
 
@@ -42,7 +44,9 @@ transactionRouter.post("/transactions", async (req, res) => {
   }
 });
 
-// Leer transacciones (por ID, por query string o rango de fechas)
+/**
+ * Leer transacciones (por ID, por query string o rango de fechas)
+ */
 transactionRouter.get("/transactions", async (req, res) => {
   const { id, involvedName, startDate, endDate, type } = req.query;
 
@@ -73,7 +77,11 @@ transactionRouter.get("/transactions", async (req, res) => {
   }
 });
 
-// Obtener una transacción por ID
+/**
+ *  Obtener una transacción por ID
+ * * @param {string} id - ID de la transacción
+ *   @returns {Transaction} - Transacción encontrada
+ */
 transactionRouter.get("/transactions/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -88,7 +96,9 @@ transactionRouter.get("/transactions/:id", async (req, res) => {
   }
 });
 
-// Obtener transacciones por nombre del cazador/mercader
+/**
+ * Obtener transacciones por nombre del cazador/mercader
+ */
 transactionRouter.get("/transactions/involved/:name", async (req, res) => {
   const { name } = req.params;
 
@@ -110,7 +120,9 @@ transactionRouter.get("/transactions/involved/:name", async (req, res) => {
   }
 });
 
-// Actualizar una transacción
+/**
+ * Actualizar una transacción
+ */
 transactionRouter.patch("/transactions/:id", async (req, res) => {
   const { id } = req.params;
   const updates = req.body;
@@ -155,7 +167,9 @@ transactionRouter.patch("/transactions/:id", async (req, res) => {
   }
 });
 
-// Borrar una transacción
+/**
+ * Borrar una transacción
+ */
 transactionRouter.delete("/transactions/:id", async (req, res) => {
   const { id } = req.params;
 
