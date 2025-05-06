@@ -15,14 +15,30 @@ jobs:
       matrix:
         node-version: [18.x, 20.x, 22.x, 23.x]
 
+    services:
+      mongodb:
+        image: mongo:5.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
     - name: Cloning repo
       uses: actions/checkout@v4
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
+
     - name: Installing dependencies
       run: npm ci
+
     - name: Running tests
+      env:
+        MONGO_URI: mongodb://localhost:27017/test-db
       run: npm test
