@@ -1,6 +1,8 @@
 {
   "entryPoints": [
-    "src/*.ts"
+    "src/*.ts",
+    "src/models/*.ts",
+    "src/routes/*.ts",
   ],
   "out": "./docs"
 }

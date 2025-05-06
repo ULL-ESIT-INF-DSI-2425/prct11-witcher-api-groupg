@@ -7,8 +7,13 @@ import { Merchant } from "../models/merchant.model.js";
 const transactionRouter = express.Router();
 
 /**
- * Crear una transacción
- */ 
+ * @route POST /transactions
+ * @description Crea una nueva transacción.
+ * @access Public
+ * @param {Object} req.body - Datos de la transacción a crear.
+ * @returns {Object} 201 - La transacción creada.
+ * @returns {Object} 400 - Error en la solicitud.
+ */
 transactionRouter.post("/transactions", async (req, res) => {
   const { involvedId, involvedType, goodDetails } = req.body;
 
@@ -45,7 +50,16 @@ transactionRouter.post("/transactions", async (req, res) => {
 });
 
 /**
- * Leer transacciones (por ID, por query string o rango de fechas)
+ * @route GET /transactions
+ * @description Obtiene transacciones filtradas por ID, nombre del involucrado, rango de fechas o tipo.
+ * @access Public
+ * @param {string} [req.query.id] - ID de la transacción.
+ * @param {string} [req.query.involvedName] - Nombre del cazador o mercader.
+ * @param {string} [req.query.startDate] - Fecha de inicio del rango.
+ * @param {string} [req.query.endDate] - Fecha de fin del rango.
+ * @param {string} [req.query.type] - Tipo de transacción ("Buy" o "Sell").
+ * @returns {Object} 200 - Lista de transacciones encontradas.
+ * @returns {Object} 400 - Error en la solicitud.
  */
 transactionRouter.get("/transactions", async (req, res) => {
   const { id, involvedName, startDate, endDate, type } = req.query;
@@ -78,9 +92,13 @@ transactionRouter.get("/transactions", async (req, res) => {
 });
 
 /**
- *  Obtener una transacción por ID
- * * @param {string} id - ID de la transacción
- *   @returns {Transaction} - Transacción encontrada
+ * @route GET /transactions/:id
+ * @description Obtiene una transacción específica por su ID.
+ * @access Public
+ * @param {string} req.params.id - ID de la transacción.
+ * @returns {Object} 200 - La transacción encontrada.
+ * @returns {Object} 404 - Transacción no encontrada.
+ * @returns {Object} 400 - Error en la solicitud.
  */
 transactionRouter.get("/transactions/:id", async (req, res) => {
   const { id } = req.params;
@@ -97,7 +115,13 @@ transactionRouter.get("/transactions/:id", async (req, res) => {
 });
 
 /**
- * Obtener transacciones por nombre del cazador/mercader
+ * @route GET /transactions/involved/:name
+ * @description Obtiene transacciones relacionadas con un cazador o mercader por su nombre.
+ * @access Public
+ * @param {string} req.params.name - Nombre del cazador o mercader.
+ * @returns {Object} 200 - Lista de transacciones encontradas.
+ * @returns {Object} 404 - Cazador o mercader no encontrado.
+ * @returns {Object} 400 - Error en la solicitud.
  */
 transactionRouter.get("/transactions/involved/:name", async (req, res) => {
   const { name } = req.params;
@@ -121,7 +145,14 @@ transactionRouter.get("/transactions/involved/:name", async (req, res) => {
 });
 
 /**
- * Actualizar una transacción
+ * @route PATCH /transactions/:id
+ * @description Actualiza una transacción específica por su ID.
+ * @access Public
+ * @param {string} req.params.id - ID de la transacción.
+ * @param {Object} req.body - Campos a actualizar.
+ * @returns {Object} 200 - La transacción actualizada.
+ * @returns {Object} 404 - Transacción no encontrada.
+ * @returns {Object} 400 - Error en la solicitud.
  */
 transactionRouter.patch("/transactions/:id", async (req, res) => {
   const { id } = req.params;
@@ -168,7 +199,13 @@ transactionRouter.patch("/transactions/:id", async (req, res) => {
 });
 
 /**
- * Borrar una transacción
+ * @route DELETE /transactions/:id
+ * @description Elimina una transacción específica por su ID.
+ * @access Public
+ * @param {string} req.params.id - ID de la transacción.
+ * @returns {Object} 200 - La transacción eliminada.
+ * @returns {Object} 404 - Transacción no encontrada.
+ * @returns {Object} 400 - Error en la solicitud.
  */
 transactionRouter.delete("/transactions/:id", async (req, res) => {
   const { id } = req.params;

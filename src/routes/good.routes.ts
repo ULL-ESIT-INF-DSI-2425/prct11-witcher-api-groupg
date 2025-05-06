@@ -4,6 +4,14 @@ import { Good } from "../models/good.model.js";
 
 const goodRouter = express.Router();
 
+/**
+ * @route POST /goods
+ * @description Crea un nuevo objeto Good en la base de datos.
+ * @access Public
+ * @param {Object} req.body - Datos del bien a crear.
+ * @returns {Object} 201 - El bien creado.
+ * @returns {Object} 500 - Error del servidor.
+ */
 goodRouter.post("/goods", async (req, res) => {
   const good = new Good(req.body);
   try {
@@ -14,6 +22,17 @@ goodRouter.post("/goods", async (req, res) => {
   }
 });
 
+/**
+ * @route GET /goods
+ * @description Obtiene una lista de bienes filtrados por nombre, descripción o material.
+ * @access Public
+ * @param {string} [req.query.name] - Nombre del bien.
+ * @param {string} [req.query.description] - Descripción del bien.
+ * @param {string} [req.query.material] - Material del bien.
+ * @returns {Object} 200 - Lista de bienes encontrados.
+ * @returns {Object} 404 - No se encontraron bienes.
+ * @returns {Object} 500 - Error del servidor.
+ */
 goodRouter.get("/goods", async (req, res) => {
   const filter_name = req.query.name ? { name: req.query.name.toString() } : {};
   const filter_description = req.query.description
@@ -39,6 +58,15 @@ goodRouter.get("/goods", async (req, res) => {
   }
 });
 
+/**
+ * @route GET /goods/:id
+ * @description Obtiene un bien específico por su ID.
+ * @access Public
+ * @param {string} req.params.id - ID del bien.
+ * @returns {Object} 200 - El bien encontrado.
+ * @returns {Object} 404 - Bien no encontrado.
+ * @returns {Object} 500 - Error del servidor.
+ */
 goodRouter.get("/goods/:id", async (req, res) => {
   const goodId = req.params.id;
   try {
@@ -52,6 +80,17 @@ goodRouter.get("/goods/:id", async (req, res) => {
   }
 });
 
+/**
+ * @route PATCH /goods
+ * @description Actualiza un bien utilizando su ID proporcionado en la query string.
+ * @access Public
+ * @param {string} req.query.id - ID del bien a actualizar.
+ * @param {Object} req.body - Campos a actualizar.
+ * @returns {Object} 200 - El bien actualizado.
+ * @returns {Object} 400 - Error en la solicitud (ID no proporcionado o actualización no válida).
+ * @returns {Object} 404 - Bien no encontrado.
+ * @returns {Object} 500 - Error del servidor.
+ */
 goodRouter.patch('/goods', async (req, res) => {
   if (!req.query.id) {
     res.status(400).send({
@@ -90,6 +129,17 @@ goodRouter.patch('/goods', async (req, res) => {
   }
 });
 
+/**
+ * @route PATCH /goods/:id
+ * @description Actualiza un bien utilizando su ID proporcionado como parámetro dinámico.
+ * @access Public
+ * @param {string} req.params.id - ID del bien a actualizar.
+ * @param {Object} req.body - Campos a actualizar.
+ * @returns {Object} 200 - El bien actualizado.
+ * @returns {Object} 400 - Error en la solicitud (actualización no válida).
+ * @returns {Object} 404 - Bien no encontrado.
+ * @returns {Object} 500 - Error del servidor.
+ */
 goodRouter.patch("/goods/:id", async (req, res) => {
   const allowedUpdates = ["name", "description", "material", "weight", "value"];
   const actualUpdates = Object.keys(req.body);
@@ -123,6 +173,17 @@ goodRouter.patch("/goods/:id", async (req, res) => {
   }
 });
 
+/**
+ * @route DELETE /goods
+ * @description Elimina bienes utilizando filtros como nombre, descripción o material.
+ * @access Public
+ * @param {string} [req.query.name] - Nombre del bien.
+ * @param {string} [req.query.description] - Descripción del bien.
+ * @param {string} [req.query.material] - Material del bien.
+ * @returns {Object} 200 - Información sobre los bienes eliminados.
+ * @returns {Object} 404 - No se encontraron bienes para eliminar.
+ * @returns {Object} 500 - Error del servidor.
+ */
 goodRouter.delete("/goods", async (req, res) => {
   const filter_name = req.query.name ? { name: req.query.name.toString() } : {};
   const filter_description = req.query.description
@@ -153,6 +214,15 @@ goodRouter.delete("/goods", async (req, res) => {
   }
 });
 
+/**
+ * @route DELETE /goods/:id
+ * @description Elimina un bien específico utilizando su ID.
+ * @access Public
+ * @param {string} req.params.id - ID del bien a eliminar.
+ * @returns {Object} 200 - El bien eliminado.
+ * @returns {Object} 404 - Bien no encontrado.
+ * @returns {Object} 400 - Error en la solicitud.
+ */
 goodRouter.delete("/goods/:id", async (req, res) => {
   try { 
     const good = await Good.findByIdAndDelete(req.params.id);

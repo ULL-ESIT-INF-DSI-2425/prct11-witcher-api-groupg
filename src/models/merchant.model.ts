@@ -1,11 +1,16 @@
 import { Document, Schema, model } from 'mongoose';
 
+/**
+ * Representa un mercader en el sistema.
+ * @interface MerchantInterface
+ * @property {string} name - Nombre del mercader.
+ * @property {string} type - Tipo de mercader.
+ * @property {string} location - Ubicación del mercader.
+ * @extends Document (de Mongoose)
+ */
 export interface MerchantInterface extends Document {
-  /** Nombre del Merchant. */
   name: string;
-  /** Tipo de Merchant (por ejemplo, vendedor de armas, alquimista, etc.). */
   type: string;
-  /** Ubicación del Merchant. */
   location: string;
 }
 

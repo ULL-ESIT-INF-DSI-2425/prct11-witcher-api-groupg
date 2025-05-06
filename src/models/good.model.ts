@@ -1,5 +1,16 @@
 import { Document, Schema, model } from 'mongoose';
 
+/**
+ * Representa un bien en el sistema.
+ * @interface GoodInterface
+ * @property {string} name - Nombre del bien.
+ * @property {string} description - Descripción del bien.
+ * @property {string} material - Material del bien.
+ * @property {number} weight - Peso del bien.
+ * @property {number} quantity - Cantidad del bien.
+ * @property {number} value - Valor del bien.
+ * @extends Document (de Mongoose)
+ */
 export interface GoodInterface extends Document {
   name: string;
   description: string;

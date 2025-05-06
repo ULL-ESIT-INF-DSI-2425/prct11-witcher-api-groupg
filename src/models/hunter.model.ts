@@ -1,5 +1,13 @@
 import { Document, Schema, model } from 'mongoose';
 
+/**
+ * Representa un cazador en el sistema.
+ * @interface HunterInterface
+ * @property {string} name - Nombre del cazador.
+ * @property {string} type - Tipo de cazador.
+ * @property {string} location - Ubicación del cazador.
+ * @extends Document (de Mongoose)
+ */
 export interface HunterInterface extends Document {
   name: string;
   type: 'weapons dealer' | 'alchemist' | 'wizard' | 'hunter';

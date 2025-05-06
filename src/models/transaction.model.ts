@@ -3,7 +3,20 @@ import { Good } from "./good.model.js";
 import { Hunter } from "./hunter.model.js";
 import { Merchant } from "./merchant.model.js";
 
-interface TransactionInterface extends Document {
+/**
+ * Representa una transacción entre un Cazador/Mercader y el sistema.
+ * @interface TransactionInterface
+ * @property {Array} goodDetails - Detalles de los bienes involucrados en la transacción.
+ * @property {string} goodDetails.goodId - ID del bien.
+ * @property {number} goodDetails.quantity - Cantidad del bien.
+ * @property {string} involvedId - ID del cazador o mercader involucrado.
+ * @property {string} involvedType - Tipo de involucrado ("Hunter" o "Merchant").
+ * @property {string} type - Tipo de transacción ("Buy" o "Sell").
+ * @property {Date} date - Fecha de la transacción.
+ * @property {number} amount - Importe total de la transacción.
+ * @extends Document (de Mongoose)
+ */
+export interface TransactionInterface extends Document {
   goodDetails: { goodId: string; quantity: number }[];
   involvedId: Schema.Types.ObjectId;
   involvedType: "Hunter" | "Merchant";

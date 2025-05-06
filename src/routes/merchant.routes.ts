@@ -4,6 +4,14 @@ import { Merchant } from "../models/merchant.model.js";
 
 export const merchantRouter = express.Router();
 
+/**
+ * @route POST /merchant
+ * @description Crea un nuevo mercader.
+ * @access Public
+ * @param {Object} req.body - Datos del mercader a crear.
+ * @returns {Object} 201 - El mercader creado.
+ * @returns {Object} 400 - Error en la solicitud.
+ */
 merchantRouter.post("/merchant", async (req, res) => {
   const merchant = new Merchant(req.body);
   try {
@@ -14,6 +22,17 @@ merchantRouter.post("/merchant", async (req, res) => {
   }
 });
 
+/**
+ * @route GET /merchant
+ * @description Obtiene una lista de mercaderes filtrados por nombre, tipo o ubicación.
+ * @access Public
+ * @param {string} [req.query.name] - Nombre del mercader.
+ * @param {string} [req.query.type] - Tipo del mercader.
+ * @param {string} [req.query.location] - Ubicación del mercader.
+ * @returns {Object} 200 - Lista de mercaderes encontrados.
+ * @returns {Object} 404 - No se encontraron mercaderes.
+ * @returns {Object} 500 - Error del servidor.
+ */
 merchantRouter.get("/merchant", async (req, res) => {
   const filter_name = req.query.name ? { name: req.query.name.toString() } : {};
   const filter_type = req.query.type ? { type: req.query.type.toString() } : {};
@@ -38,6 +57,15 @@ merchantRouter.get("/merchant", async (req, res) => {
   }
 });
 
+/**
+ * @route GET /merchant/:id
+ * @description Obtiene un mercader específico por su ID.
+ * @access Public
+ * @param {string} req.params.id - ID del mercader.
+ * @returns {Object} 200 - El mercader encontrado.
+ * @returns {Object} 404 - Mercader no encontrado.
+ * @returns {Object} 400 - Error en la solicitud.
+ */
 merchantRouter.get("/merchant/:id", async (req, res) => {
   const _id = req.params.id;
 
@@ -52,6 +80,16 @@ merchantRouter.get("/merchant/:id", async (req, res) => {
   }
 });
 
+/**
+ * @route PATCH /merchant
+ * @description Actualiza un mercader utilizando su ID proporcionado en la query string.
+ * @access Public
+ * @param {string} req.query.id - ID del mercader a actualizar.
+ * @param {Object} req.body - Campos a actualizar.
+ * @returns {Object} 200 - El mercader actualizado.
+ * @returns {Object} 400 - Error en la solicitud.
+ * @returns {Object} 404 - Mercader no encontrado.
+ */
 merchantRouter.patch("/merchant", async (req, res) => {
   if (!req.query.id) {
     res.status(400).send({
@@ -90,6 +128,16 @@ merchantRouter.patch("/merchant", async (req, res) => {
   }
 });
 
+/**
+ * @route PATCH /merchant/:id
+ * @description Actualiza un mercader utilizando su ID proporcionado como parámetro dinámico.
+ * @access Public
+ * @param {string} req.params.id - ID del mercader a actualizar.
+ * @param {Object} req.body - Campos a actualizar.
+ * @returns {Object} 200 - El mercader actualizado.
+ * @returns {Object} 400 - Error en la solicitud.
+ * @returns {Object} 404 - Mercader no encontrado.
+ */
 merchantRouter.patch("/merchant/:id", async (req, res) => {
   const _id = req.params.id;
 
@@ -112,6 +160,17 @@ merchantRouter.patch("/merchant/:id", async (req, res) => {
   }
 });
 
+/**
+ * @route DELETE /merchant
+ * @description Elimina mercaderes utilizando filtros como nombre, tipo o ubicación.
+ * @access Public
+ * @param {string} [req.query.name] - Nombre del mercader.
+ * @param {string} [req.query.type] - Tipo del mercader.
+ * @param {string} [req.query.location] - Ubicación del mercader.
+ * @returns {Object} 200 - Información sobre los mercaderes eliminados.
+ * @returns {Object} 404 - No se encontraron mercaderes para eliminar.
+ * @returns {Object} 500 - Error del servidor.
+ */
 merchantRouter.delete("/merchant", async (req, res) => {
   const filter_name = req.query.name ? { name: req.query.name.toString() } : {};
   const filter_type = req.query.type ? { type: req.query.type.toString() } : {};
@@ -141,6 +200,15 @@ merchantRouter.delete("/merchant", async (req, res) => {
   }
 });
 
+/**
+ * @route DELETE /merchant/:id
+ * @description Elimina un mercader específico utilizando su ID.
+ * @access Public
+ * @param {string} req.params.id - ID del mercader a eliminar.
+ * @returns {Object} 200 - El mercader eliminado.
+ * @returns {Object} 404 - Mercader no encontrado.
+ * @returns {Object} 400 - Error en la solicitud.
+ */
 merchantRouter.delete("/merchant/:id", async (req, res) => {
   const _id = req.params.id;
   try {
