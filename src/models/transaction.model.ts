@@ -1,46 +1,53 @@
 import { Document, Schema, model } from "mongoose";
-import { Good } from "./good.model.js";
-import { Hunter } from "./hunter.model.js";
-import { Merchant } from "./merchant.model.js";
+import { Good, GoodInterface } from "./good.model.js";
+import { Hunter, HunterInterface } from "./hunter.model.js";
+import { Merchant, MerchantInterface } from "./merchant.model.js";
+import validator from "validator";
 
 /**
  * Representa una transacción entre un Cazador/Mercader y el sistema.
  * @interface TransactionInterface
- * @property {Array} goodDetails - Detalles de los bienes involucrados en la transacción.
- * @property {string} goodDetails.goodId - ID del bien.
- * @property {number} goodDetails.quantity - Cantidad del bien.
- * @property {string} involvedId - ID del cazador o mercader involucrado.
+ * @property {Array} goods - Bienes involucrados en la transacción
+ * @property {string} goodcurrentGoods.goodID - ID del bien.
+ * @property {number} goodcurrentGoods.amount - Cantidad de bienes.
+ * @property {string} involvedID - ID del cazador o mercader involucrado.
  * @property {string} involvedType - Tipo de involucrado ("Hunter" o "Merchant").
  * @property {string} type - Tipo de transacción ("Buy" o "Sell").
  * @property {Date} date - Fecha de la transacción.
- * @property {number} amount - Importe total de la transacción.
+ * @property {number} transactionValue - Importe total de la transacción.
  * @extends Document (de Mongoose)
  */
 export interface TransactionInterface extends Document {
-  goodDetails: { goodId: string; quantity: number }[];
-  involvedId: Schema.Types.ObjectId;
+  goods: { goodID: GoodInterface; amount: number }[];
+  involvedID: HunterInterface | MerchantInterface;
   involvedType: "Hunter" | "Merchant";
   type: "Buy" | "Sell";
   date: Date;
-  amount: number;
+  transactionValue: number;
 }
 
 const TransactionSchema = new Schema<TransactionInterface>({
-  goodDetails: [
+  goods: [
     {
-      goodId: {
+      goodID: {
         type: Schema.Types.ObjectId,
         ref: "Good",
         required: true,
       },
-      quantity: {
+      amount: {
         type: Number,
         required: true,
-        min: 1,
+        validate: (value: number) => {
+          if (!validator.isInt(value.toString(), { min: 1 })) {
+            throw new Error(
+              "La cantidad de bienes debe ser un número entero mayor que 0",
+            );
+          }
+        },
       },
     },
   ],
-  involvedId: {
+  involvedID: {
     type: Schema.Types.ObjectId,
     refPath: "involvedType",
     required: true,
@@ -59,12 +66,18 @@ const TransactionSchema = new Schema<TransactionInterface>({
     type: Date,
     default: Date.now,
     trim: true,
-    required: true,
+    required: false,
   },
-  amount: {
+  transactionValue: {
     type: Number,
     trim: true,
-    required: true,
+    required: false,
+    default: 0,
+    validate: (value: number) => {
+      if (value < 0) {
+        throw new Error("El valor del bien debe ser mayor o igual que 0.");
+      }
+    },
   },
 });
 
@@ -77,8 +90,8 @@ TransactionSchema.pre("save", async function (next) {
   // Verificar existencia de cazador/mercader
   const involved =
     transaction.involvedType === "Hunter"
-      ? await Hunter.findById(transaction.involvedId)
-      : await Merchant.findById(transaction.involvedId);
+      ? await Hunter.findById(transaction.involvedID)
+      : await Merchant.findById(transaction.involvedID);
 
   if (!involved) {
     throw new Error(`${transaction.involvedType} no encontrado`);
@@ -86,22 +99,22 @@ TransactionSchema.pre("save", async function (next) {
 
   // Calcular el importe total
   let totalAmount = 0;
-  for (const detail of transaction.goodDetails) {
-    const good = await Good.findById(detail.goodId);
+  for (const detail of transaction.goods) {
+    const good = await Good.findById(detail.goodID);
     if (!good) {
-      throw new Error(`Bien con ID ${detail.goodId} no encontrado`);
+      throw new Error(`Bien con ID ${detail.goodID} no encontrado`);
     }
-    if (transaction.type === "Sell" && good.quantity < detail.quantity) {
+    if (transaction.type === "Sell" && good.stock < detail.amount) {
       throw new Error(`Stock insuficiente para el bien ${good.name}`);
     }
-    totalAmount += good.value * detail.quantity;
+    totalAmount += good.value * detail.amount;
   }
-  transaction.amount = totalAmount;
+  transaction.transactionValue = totalAmount;
 
   next();
 });
 
 export const Transaction = model<TransactionInterface>(
   "Transaction",
-  TransactionSchema
+  TransactionSchema,
 );

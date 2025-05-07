@@ -1,5 +1,6 @@
 import express from "express";
 import { Good } from "../models/good.model.js";
+// import { Transaction } from "../models/transaction.model.js";
 
 const goodRouter = express.Router();
 
@@ -48,9 +49,9 @@ goodRouter.get("/goods", async (req, res) => {
   try {
     const goods = await Good.find(filter);
     if (goods.length !== 0) {
-      res.send(goods);
+      res.status(200).send(goods);
     } else {
-      res.status(404).send();
+      res.status(404).send({ error: "No goods found" });
     }
   } catch (error) {
     res.status(500).send(error);
@@ -67,11 +68,10 @@ goodRouter.get("/goods", async (req, res) => {
  * @returns {Object} 500 - Error del servidor.
  */
 goodRouter.get("/goods/:id", async (req, res) => {
-  const goodId = req.params.id;
   try {
-    const good = await Good.findById(goodId);
+    const good = await Good.findById(req.params.id);
     if (!good) {
-      res.status(404).send();
+      res.status(404).send({ error: "Good not found" });
     }
     res.status(200).send(good);
   } catch (error) {
@@ -90,36 +90,39 @@ goodRouter.get("/goods/:id", async (req, res) => {
  * @returns {Object} 404 - Bien no encontrado.
  * @returns {Object} 500 - Error del servidor.
  */
-goodRouter.patch('/goods', async (req, res) => {
-  if (!req.query.id) {
+goodRouter.patch("/goods", async (req, res) => {
+  if (!req.query.name) {
     res.status(400).send({
-      error: 'An id must be provided in the query string',
+      error: "A name must be provided in the query string",
     });
   } else {
-    const allowedUpdates = ['name', 'description', 'material', 'weight', 'value'];
-    const actualUpdates = Object.keys(req.body);
-    const isValidUpdate =
-      actualUpdates.every((update) => allowedUpdates.includes(update));
+    const allowedUpdates = [
+      "description",
+      "material",
+      "weight",
+      "stock",
+      "value",
+    ];
+    const updates = Object.keys(req.body);
+    const isValidUpdate = updates.every((update) =>
+      allowedUpdates.includes(update),
+    );
     if (!isValidUpdate) {
-      res.status(400).send({
-        error: 'Update is not permitted',
-      });
+      res.status(400).send({ error: "Invalid update!" });
     } else {
       try {
         const good = await Good.findOneAndUpdate(
-          {
-            id: req.query.id.toString()
-          }, 
-          req.body, 
+          { name: req.query.name.toString() },
+          req.body,
           {
             new: true,
             runValidators: true,
           },
         );
         if (!good) {
-          res.status(404).send();
+          res.status(404).send({ error: "Good not found" });
         } else {
-          res.send(good);
+          res.status(200).send(good);
         }
       } catch (error) {
         res.status(500).send(error);
@@ -140,31 +143,29 @@ goodRouter.patch('/goods', async (req, res) => {
  * @returns {Object} 500 - Error del servidor.
  */
 goodRouter.patch("/goods/:id", async (req, res) => {
-  const allowedUpdates = ["name", "description", "material", "weight", "value"];
-  const actualUpdates = Object.keys(req.body);
-  const isValidUpdate =
-    actualUpdates.every((update) => allowedUpdates.includes(update));
-
+  const allowedUpdates = [
+    "description",
+    "material",
+    "weight",
+    "stock",
+    "value",
+  ];
+  const updates = Object.keys(req.body);
+  const isValidUpdate = updates.every((update) =>
+    allowedUpdates.includes(update),
+  );
   if (!isValidUpdate) {
-    res.status(400).send({
-      error: "Update is not permitted",
-    });
+    res.status(400).send({ error: "Invalid update!" });
   } else {
     try {
-      const good = await Good.findOneAndUpdate(
-        {
-          id: req.params.id.toString(),
-        }, 
-        req.body, 
-        {
-          new: true,
-          runValidators: true,
-        },
-      );
+      const good = await Good.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true,
+      });
       if (!good) {
-        res.status(404).send();
+        res.status(404).send({ error: "Good not found" });
       } else {
-        res.send(good);
+        res.status(200).send(good);
       }
     } catch (error) {
       res.status(500).send(error);
@@ -196,14 +197,13 @@ goodRouter.delete("/goods", async (req, res) => {
     ...filter_description,
     ...filter_material,
   };
-
   try {
     const goods = await Good.find(filter);
     if (goods.length === 0) {
       res.status(404).send({ error: "No goods found" });
     } else {
       const result = await Good.deleteMany(filter);
-      res.send({
+      res.status(200).send({
         deletedCount: result.deletedCount,
         deletedGoods: goods,
       });
@@ -223,15 +223,15 @@ goodRouter.delete("/goods", async (req, res) => {
  * @returns {Object} 400 - Error en la solicitud.
  */
 goodRouter.delete("/goods/:id", async (req, res) => {
-  try { 
+  try {
     const good = await Good.findByIdAndDelete(req.params.id);
     if (!good) {
       res.status(404).send();
     } else {
-      res.send(good);
+      res.status(200).send(good);
     }
   } catch (error) {
-    res.status(400).send();
+    res.status(500).send(error);
   }
 });
 

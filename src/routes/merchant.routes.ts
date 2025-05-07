@@ -17,11 +17,7 @@ merchantRouter.post("/merchant", async (req, res) => {
     await merchant.save();
     res.status(201).send(merchant);
   } catch (error) {
-    if (error.code === 11000) {
-      res.status(400).send({ error: "Duplicate key error: Merchant name must be unique" });
-    } else {
-      res.status(400).send(error);
-    }
+    res.status(500).send(error);
   }
 });
 
@@ -42,13 +38,11 @@ merchantRouter.get("/merchant", async (req, res) => {
   const filter_location = req.query.location
     ? { location: req.query.location.toString() }
     : {};
-
   const filter = {
     ...filter_name,
     ...filter_type,
     ...filter_location,
   };
-
   try {
     const merchant = await Merchant.find(filter);
     if (merchant.length === 0) {
@@ -56,7 +50,7 @@ merchantRouter.get("/merchant", async (req, res) => {
     }
     res.status(200).send(merchant);
   } catch (error) {
-    res.status(500).send({ error: error.message });
+    res.status(500).send(error);
   }
 });
 
@@ -70,16 +64,14 @@ merchantRouter.get("/merchant", async (req, res) => {
  * @returns {Object} 400 - Error en la solicitud.
  */
 merchantRouter.get("/merchant/:id", async (req, res) => {
-  const _id = req.params.id;
-
   try {
-    const merchant = await Merchant.findById(_id);
+    const merchant = await Merchant.findById(req.params.id);
     if (!merchant) {
-      res.status(404).send();
+      res.status(404).send({ error: "Merchant not found" });
     }
     res.status(200).send(merchant);
   } catch (error) {
-    res.status(400).send(error);
+    res.status(500).send(error);
   }
 });
 
@@ -87,42 +79,39 @@ merchantRouter.get("/merchant/:id", async (req, res) => {
  * @route PATCH /merchant
  * @description Actualiza un mercader utilizando su ID proporcionado en la query string.
  * @access Public
- * @param {string} req.query.id - ID del mercader a actualizar.
+ * @param {string} req.query.name - Nombre del mercader a actualizar.
  * @param {Object} req.body - Campos a actualizar.
  * @returns {Object} 200 - El mercader actualizado.
  * @returns {Object} 400 - Error en la solicitud.
  * @returns {Object} 404 - Mercader no encontrado.
  */
 merchantRouter.patch("/merchant", async (req, res) => {
-  if (!req.query.id) {
+  if (!req.query.name) {
     res.status(400).send({
-      error: 'An id must be provided in the query string',
+      error: "A name must be provided in the query string",
     });
   } else {
-    const allowedUpdates = ['name', 'description', 'material', 'weight', 'value'];
-    const actualUpdates = Object.keys(req.body);
-    const isValidUpdate =
-      actualUpdates.every((update) => allowedUpdates.includes(update));
+    const allowedUpdates = ["type", "location"];
+    const updates = Object.keys(req.body);
+    const isValidUpdate = updates.every((update) =>
+      allowedUpdates.includes(update),
+    );
     if (!isValidUpdate) {
-      res.status(400).send({
-        error: 'Update is not permitted',
-      });
+      res.status(400).send({ error: "Invalid update!" });
     } else {
       try {
         const merchant = await Merchant.findOneAndUpdate(
-          {
-            id: req.query.id.toString()
-          }, 
-          req.body, 
+          { name: req.query.name.toString() },
+          req.body,
           {
             new: true,
             runValidators: true,
           },
         );
         if (!merchant) {
-          res.status(404).send();
+          res.status(404).send({ error: "Merchant not found" });
         } else {
-          res.send(merchant);
+          res.status(200).send(merchant);
         }
       } catch (error) {
         res.status(500).send(error);
@@ -142,24 +131,30 @@ merchantRouter.patch("/merchant", async (req, res) => {
  * @returns {Object} 404 - Mercader no encontrado.
  */
 merchantRouter.patch("/merchant/:id", async (req, res) => {
-  const _id = req.params.id;
-
-  const allowedUpdates = ['name', 'type', 'location'];
+  const allowedUpdates = ["type", "location"];
   const updates = Object.keys(req.body);
-  const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
-
-  if (!isValidOperation) {
-    res.status(400).send({ error: 'Invalid updates!' });
-  }
-
-  try {
-    const merchant = await Merchant.findByIdAndUpdate(_id, req.body, { new: true, runValidators: true });
-    if (!merchant) {
-      res.status(404).send();
+  const isValidUpdate = updates.every((update) =>
+    allowedUpdates.includes(update),
+  );
+  if (!isValidUpdate) {
+    res.status(400).send({ error: "Invalid updates!" });
+  } else {
+    try {
+      const merchant = await Merchant.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        {
+          new: true,
+          runValidators: true,
+        },
+      );
+      if (!merchant) {
+        res.status(404).send({ error: "Merchant not found" });
+      }
+      res.status(200).send(merchant);
+    } catch (error) {
+      res.status(500).send(error);
     }
-    res.status(200).send(merchant);
-  } catch (error) {
-    res.status(400).send(error);
   }
 });
 
@@ -180,20 +175,18 @@ merchantRouter.delete("/merchant", async (req, res) => {
   const filter_location = req.query.location
     ? { location: req.query.location.toString() }
     : {};
-
   const filter = {
     ...filter_name,
     ...filter_type,
     ...filter_location,
   };
-
   try {
     const merchant = await Merchant.find(filter);
     if (merchant.length === 0) {
       res.status(404).send({ error: "No goods found" });
     } else {
       const result = await Merchant.deleteMany(filter);
-      res.send({
+      res.status(200).send({
         deletedCount: result.deletedCount,
         deletedGoods: merchant,
       });
@@ -213,15 +206,14 @@ merchantRouter.delete("/merchant", async (req, res) => {
  * @returns {Object} 400 - Error en la solicitud.
  */
 merchantRouter.delete("/merchant/:id", async (req, res) => {
-  const _id = req.params.id;
   try {
-    const merchant = await Merchant.findByIdAndDelete(_id);
+    const merchant = await Merchant.findByIdAndDelete(req.params.id);
     if (!merchant) {
-      res.status(404).send();
+      res.status(404).send({ error: "Merchant not found" });
     }
     res.status(200).send(merchant);
   } catch (error) {
-    res.status(400).send(error);
+    res.status(500).send(error);
   }
 });
 

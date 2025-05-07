@@ -15,39 +15,94 @@ const transactionRouter = express.Router();
  * @returns {Object} 400 - Error en la solicitud.
  */
 transactionRouter.post("/transactions", async (req, res) => {
-  const { involvedId, involvedType, goodDetails } = req.body;
+  const { goods, involvedName, involvedType, type } = req.body;
 
   try {
-    const transaction = new Transaction({
-      involvedId,
-      involvedType,
-      goodDetails,
-      type: involvedType === "Hunter" ? "Sell" : "Buy",
-    });
+    // Validar cazador o mercader
+    const involved = await validateInvolved(involvedName, involvedType, type);
 
-    // Actualizar stock de bienes
-    for (const detail of goodDetails) {
-      const good = await Good.findById(detail.goodId);
-      if (!good) {
-        throw new Error(`Bien con ID ${detail.goodId} no encontrado`);
-      }
-      if (transaction.type === "Sell") {
-        if (good.quantity < detail.quantity) {
-          throw new Error(`Stock insuficiente para el bien ${good.name}`);
-        }
-        good.quantity -= detail.quantity;
-      } else {
-        good.quantity += detail.quantity;
-      }
-      await good.save();
+    // Validar bienes y calcular importe total
+    const { newGoods, totalValue } = await validateAndProcessGoods(goods, type);
+
+    if (newGoods.length === 0) {
+      res.status(404).send({ error: "Goods not found or insufficient stock" });
     }
+    // Crear transacción
+    const transaction = new Transaction({
+      goods: newGoods,
+      involvedID: involved._id,
+      involvedType,
+      type,
+      transactionValue: totalValue,
+    });
 
     await transaction.save();
     res.status(201).send(transaction);
   } catch (error) {
-    res.status(400).send({ error: error.message });
+    res.status(500).send(error);
   }
 });
+
+async function validateInvolved(
+  name: string,
+  involvedType: "Hunter" | "Merchant",
+  type: "Buy" | "Sell",
+) {
+  let involved;
+  if (involvedType === "Hunter" && type === "Buy") {
+    involved = await Hunter.findOne({ name });
+    if (!involved) throw new Error("Cazador no encontrado");
+  } else if (involvedType === "Merchant" && type === "Sell") {
+    involved = await Merchant.findOne({ name });
+    if (!involved) throw new Error("Mercader no encontrado");
+  } else {
+    throw new Error(
+      "Un cazador no puede comprar y un mercader no puede vender",
+    );
+  }
+  return involved;
+}
+
+async function validateAndProcessGoods(
+  goods: { name: string; amount: number }[],
+  type: "Buy" | "Sell",
+) {
+  const newGoods = [];
+  let totalValue = 0;
+  for (const { name, amount } of goods) {
+    const good = await Good.findOne({ name });
+    if (type === "Buy") {
+      if (!good) continue;
+      else if (good.stock < amount) continue;
+      else {
+        good.stock -= amount;
+        await good.save();
+        newGoods.push({ goodID: good._id, amount });
+        totalValue += good.value * amount;
+      }
+    } else if (type === "Sell") {
+      if (!good) {
+        const newGood = new Good({
+          name,
+          description: "Bien creado automáticamente",
+          material: "Material desconocido",
+          weight: 10,
+          stock: amount,
+          value: 100,
+        });
+        await newGood.save();
+        newGoods.push({ goodID: newGood._id, amount });
+        totalValue += good.value * amount;
+      } else {
+        good.stock += amount;
+        await good.save();
+        newGoods.push({ goodID: good._id, amount });
+        totalValue += good.value * amount;
+      }
+    }
+  }
+  return { newGoods, totalValue };
+}
 
 /**
  * @route GET /transactions
@@ -63,10 +118,10 @@ transactionRouter.post("/transactions", async (req, res) => {
  */
 transactionRouter.get("/transactions", async (req, res) => {
   const { id, involvedName, startDate, endDate, type } = req.query;
-
   try {
     if (id) {
-      const transaction = await Transaction.findById(id).populate("goodDetails.goodId");
+      const transaction =
+        await Transaction.findById(id).populate("goodDetails.goodId");
       if (!transaction) {
         res.status(404).send({ error: "Transacción no encontrada" });
       }
@@ -78,13 +133,17 @@ transactionRouter.get("/transactions", async (req, res) => {
       filter.involvedName = involvedName;
     }
     if (startDate && endDate) {
-      filter.date = { $gte: new Date(startDate as string), $lte: new Date(endDate as string) };
+      filter.date = {
+        $gte: new Date(startDate as string),
+        $lte: new Date(endDate as string),
+      };
     }
     if (type) {
       filter.type = type;
     }
 
-    const transactions = await Transaction.find(filter).populate("goodDetails.goodId");
+    const transactions =
+      await Transaction.find(filter).populate("goodDetails.goodId");
     res.send(transactions);
   } catch (error) {
     res.status(400).send({ error: error.message });
@@ -101,16 +160,14 @@ transactionRouter.get("/transactions", async (req, res) => {
  * @returns {Object} 400 - Error en la solicitud.
  */
 transactionRouter.get("/transactions/:id", async (req, res) => {
-  const { id } = req.params;
-
   try {
-    const transaction = await Transaction.findById(id).populate("goodDetails.goodId");
+    const transaction = await Transaction.findById(req.params.id);
     if (!transaction) {
-      res.status(404).send({ error: "Transacción no encontrada" });
+      res.status(404).send({ error: "Transaction not found" });
     }
-    res.send(transaction);
+    res.status(200).send(transaction);
   } catch (error) {
-    res.status(400).send({ error: error.message });
+    res.status(500).send(error);
   }
 });
 
@@ -143,7 +200,10 @@ transactionRouter.get("/transactions/involved/:name", async (req, res) => {
     const involvedId = hunter ? hunter._id : merchant._id;
     const involvedType = hunter ? "Hunter" : "Merchant";
 
-    const transactions = await Transaction.find({ involvedId, involvedType }).populate("goodDetails.goodId");
+    const transactions = await Transaction.find({
+      involvedId,
+      involvedType,
+    }).populate("goodDetails.goodId");
     res.send(transactions);
   } catch (error) {
     res.status(400).send({ error: error.message });
@@ -171,12 +231,12 @@ transactionRouter.patch("/transactions/:id", async (req, res) => {
     }
 
     // Revertir stock de bienes antes de actualizar
-    for (const detail of transaction.goodDetails) {
-      const good = await Good.findById(detail.goodId);
+    for (const detail of transaction.goods) {
+      const good = await Good.findById(detail.goodID);
       if (transaction.type === "Sell") {
-        good.quantity += detail.quantity;
+        good.stock += detail.amount;
       } else {
-        good.quantity -= detail.quantity;
+        good.stock -= detail.amount;
       }
       await good.save();
     }
@@ -184,15 +244,15 @@ transactionRouter.patch("/transactions/:id", async (req, res) => {
     Object.assign(transaction, updates);
 
     // Actualizar stock de bienes con nuevos valores
-    for (const detail of transaction.goodDetails) {
-      const good = await Good.findById(detail.goodId);
+    for (const detail of transaction.goods) {
+      const good = await Good.findById(detail.goodID);
       if (transaction.type === "Sell") {
-        if (good.quantity < detail.quantity) {
+        if (good.stock < detail.amount) {
           throw new Error(`Stock insuficiente para el bien ${good.name}`);
         }
-        good.quantity -= detail.quantity;
+        good.stock -= detail.amount;
       } else {
-        good.quantity += detail.quantity;
+        good.stock += detail.amount;
       }
       await good.save();
     }
@@ -223,12 +283,12 @@ transactionRouter.delete("/transactions/:id", async (req, res) => {
     }
 
     // Revertir stock de bienes
-    for (const detail of transaction.goodDetails) {
-      const good = await Good.findById(detail.goodId);
+    for (const detail of transaction.goods) {
+      const good = await Good.findById(detail.goodID);
       if (transaction.type === "Sell") {
-        good.quantity += detail.quantity;
+        good.stock += detail.amount;
       } else {
-        good.quantity -= detail.quantity;
+        good.stock -= detail.amount;
       }
       await good.save();
     }

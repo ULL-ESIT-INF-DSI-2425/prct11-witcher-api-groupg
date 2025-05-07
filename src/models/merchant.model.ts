@@ -1,4 +1,5 @@
-import { Document, Schema, model } from 'mongoose';
+import { Document, Schema, model } from "mongoose";
+import validator from "validator";
 
 /**
  * Representa un mercader en el sistema.
@@ -10,7 +11,16 @@ import { Document, Schema, model } from 'mongoose';
  */
 export interface MerchantInterface extends Document {
   name: string;
-  type: string;
+  type:
+    | "General"
+    | "Alquimista"
+    | "Herrero"
+    | "Cazador"
+    | "Armero"
+    | "Artesano"
+    | "Sastre"
+    | "Joyero"
+    | "Mago";
   location: string;
 }
 
@@ -21,8 +31,18 @@ const MerchantSchema = new Schema<MerchantInterface>({
     trim: true,
     unique: true,
     validate: (value: string) => {
-      if (!value.match(/^[A-Z]/)) {
-        throw new Error('Note name must start with a capital letter');
+      if (!value.match(/^[A-ZÁÉÍÓÚÑ]/)) {
+        throw new Error(
+          "El nombre del mercader debe comenzar con una letra mayúscula.",
+        );
+      } else if (!validator.isAlpha(value, "es-ES", { ignore: " " })) {
+        throw new Error(
+          "El nombre del mercader solo puede contener letras y espacios.",
+        );
+      } else if (!validator.isLength(value, { min: 2, max: 30 })) {
+        throw new Error(
+          "El nombre del mercader debe tener entre 2 y 30 caracteres.",
+        );
       }
     },
   },
@@ -30,13 +50,38 @@ const MerchantSchema = new Schema<MerchantInterface>({
     type: String,
     trim: true,
     required: true,
-    enum: ['blacksmith', 'alchemist', 'general merchant', 'hunter']
+    enum: [
+      "General",
+      "Alquimista",
+      "Herrero",
+      "Cazador",
+      "Armero",
+      "Artesano",
+      "Sastre",
+      "Joyero",
+      "Mago",
+    ],
   },
   location: {
     type: String,
     trim: true,
     required: true,
+    validate: (value: string) => {
+      if (!value.match(/^[A-ZÁÉÍÓÚÑ]/)) {
+        throw new Error(
+          "La ubicación del mercader debe comenzar con una letra mayúscula.",
+        );
+      } else if (!validator.isAlphanumeric(value, "es-ES", { ignore: " " })) {
+        throw new Error(
+          "La ubicación del mercader solo puede contener letras, números y espacios.",
+        );
+      } else if (!validator.isLength(value, { min: 2, max: 30 })) {
+        throw new Error(
+          "La ubicación del mercader debe tener entre 2 y 30 caracteres.",
+        );
+      }
+    },
   },
-})
+});
 
-export const Merchant = model<MerchantInterface>('Merchant', MerchantSchema);
+export const Merchant = model<MerchantInterface>("Merchant", MerchantSchema);
