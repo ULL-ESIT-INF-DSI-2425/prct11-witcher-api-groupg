@@ -26,7 +26,8 @@ export interface MerchantInterface extends Document {
 }
 
 const validation = (value: string) => {
-  if (!value.match(/^[A-ZÁÉÍÓÚÑ]/)) {
+  const upperCase = /^[A-ZÁÉÍÓÚÑ]/
+  if (!upperCase.exec(value)) {
     throw new Error("El nombre y la localizacion del mercader deben comenzar con una letra mayúscula.");
   } else if (!validator.isAlpha(value, "es-ES", { ignore: " " })) {
     throw new Error("El nombre y la localizacion del mercader solo pueden contener letras y espacios.");

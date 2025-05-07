@@ -28,7 +28,8 @@ export interface HunterInterface extends Document {
 }
 
 const validation = (value: string) => {
-  if (!value.match(/^[A-ZÁÉÍÓÚÑ]/)) {
+  const upperCase = /^[A-ZÁÉÍÓÚÑ]/
+  if (!upperCase.exec(value)) {
     throw new Error("El nombre y la localizacion del cliente deben comenzar con una letra mayúscula.");
   } else if (!validator.isAlpha(value, "es-ES", { ignore: " " })) {
     throw new Error("El nombre y la localizacion del cliente solo pueden contener letras y espacios.");
