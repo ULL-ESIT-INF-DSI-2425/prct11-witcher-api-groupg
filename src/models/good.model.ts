@@ -39,7 +39,8 @@ const GoodSchema = new Schema<GoodInterface>({
     required: true,
     trim: true,
     validate: (value: string) => {
-      if (!value.match(/^[A-ZÁÉÍÓÚÑ]/)) {
+      const startsWithUppercase = /^[A-ZÁÉÍÓÚÑ]/
+      if (!startsWithUppercase.exec(value)) {
         throw new Error(
           "El nombre del bien debe comenzar con una letra mayúscula.",
         );
@@ -59,7 +60,8 @@ const GoodSchema = new Schema<GoodInterface>({
     required: true,
     trim: true,
     validate: (value: string) => {
-      if (!value.match(/^[A-ZÁÉÍÓÚÑ]/)) {
+      const startsWithUppercase = /^[A-ZÁÉÍÓÚÑ]/;
+      if (!startsWithUppercase.exec(value)) {
         throw new Error(
           "La descripción del bien debe comenzar con una letra mayúscula.",
         );

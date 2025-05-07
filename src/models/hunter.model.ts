@@ -22,9 +22,30 @@ export interface HunterInterface extends Document {
     | "Cazador"
     | "Bárbaro"
     | "Clérigo"
-    | "Asesino";
+    | "Asesino"
+    | "No especificado";
   location: string;
 }
+
+const validateName = (value: string) => {
+  if (!value.match(/^[A-ZÁÉÍÓÚÑ]/)) {
+    throw new Error("El nombre del cliente debe comenzar con una letra mayúscula.");
+  } else if (!validator.isAlpha(value, "es-ES", { ignore: " " })) {
+    throw new Error("El nombre del cliente solo puede contener letras y espacios.");
+  } else if (!validator.isLength(value, { min: 2, max: 30 })) {
+    throw new Error("El nombre del cliente debe tener entre 2 y 30 caracteres.");
+  }
+};
+
+const validateLocation = (value: string) => {
+  if (!value.match(/^[A-ZÁÉÍÓÚÑ]/)) {
+    throw new Error("La ubicación del cliente debe comenzar con una letra mayúscula.");
+  } else if (!validator.isAlphanumeric(value, "es-ES", { ignore: " " })) {
+    throw new Error("La ubicación del cliente solo puede contener letras, números y espacios.");
+  } else if (!validator.isLength(value, { min: 2, max: 30 })) {
+    throw new Error("La ubicación del cliente debe tener entre 2 y 30 caracteres.");
+  }
+};
 
 const HunterSchema = new Schema<HunterInterface>({
   name: {
@@ -32,21 +53,7 @@ const HunterSchema = new Schema<HunterInterface>({
     required: true,
     trim: true,
     unique: true,
-    validate: (value: string) => {
-      if (!value.match(/^[A-ZÁÉÍÓÚÑ]/)) {
-        throw new Error(
-          "El nombre del cliente debe comenzar con una letra mayúscula.",
-        );
-      } else if (!validator.isAlpha(value, "es-ES", { ignore: " " })) {
-        throw new Error(
-          "El nombre del cliente solo puede contener letras y espacios.",
-        );
-      } else if (!validator.isLength(value, { min: 2, max: 30 })) {
-        throw new Error(
-          "El nombre del cliente debe tener entre 2 y 30 caracteres.",
-        );
-      }
-    },
+    validate: validateName,
   },
   race: {
     type: String,
@@ -64,28 +71,15 @@ const HunterSchema = new Schema<HunterInterface>({
       "Bárbaro",
       "Clérigo",
       "Asesino",
+      "No especificado",
     ],
   },
   location: {
     type: String,
     required: true,
     trim: true,
-    validate: (value: string) => {
-      if (!value.match(/^[A-ZÁÉÍÓÚÑ]/)) {
-        throw new Error(
-          "La ubicación del cliente debe comenzar con una letra mayúscula.",
-        );
-      } else if (!validator.isAlphanumeric(value, "es-ES", { ignore: " " })) {
-        throw new Error(
-          "La ubicación del cliente solo puede contener letras, números y espacios.",
-        );
-      } else if (!validator.isLength(value, { min: 2, max: 30 })) {
-        throw new Error(
-          "La ubicación del cliente debe tener entre 2 y 30 caracteres.",
-        );
-      }
-    },
-  },
+    validate: validateLocation,
+  }
 });
 
 export const Hunter = model<HunterInterface>("Hunter", HunterSchema);

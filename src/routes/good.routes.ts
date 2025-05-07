@@ -1,6 +1,5 @@
 import express from "express";
 import { Good } from "../models/good.model.js";
-// import { Transaction } from "../models/transaction.model.js";
 
 const goodRouter = express.Router();
 
@@ -97,6 +96,7 @@ goodRouter.patch("/goods", async (req, res) => {
     });
   } else {
     const allowedUpdates = [
+      "name",
       "description",
       "material",
       "weight",
@@ -144,6 +144,7 @@ goodRouter.patch("/goods", async (req, res) => {
  */
 goodRouter.patch("/goods/:id", async (req, res) => {
   const allowedUpdates = [
+    "name",
     "description",
     "material",
     "weight",

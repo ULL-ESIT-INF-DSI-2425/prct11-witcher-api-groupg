@@ -91,7 +91,7 @@ hunterRouter.patch("/hunter", async (req, res) => {
       error: "A name must be provided in the query string",
     });
   } else {
-    const allowedUpdates = ["race", "location"];
+    const allowedUpdates = ["name", "race", "location"];
     const updates = Object.keys(req.body);
     const isValidUpdate = updates.every((update) =>
       allowedUpdates.includes(update),
@@ -131,7 +131,7 @@ hunterRouter.patch("/hunter", async (req, res) => {
  * @returns {Object} 404 - Cazador no encontrado.
  */
 hunterRouter.patch("/hunter/:id", async (req, res) => {
-  const allowedUpdates = ["race", "location"];
+  const allowedUpdates = ["name", "race", "location"];
   const updates = Object.keys(req.body);
   const isValidUpdate = updates.every((update) =>
     allowedUpdates.includes(update),

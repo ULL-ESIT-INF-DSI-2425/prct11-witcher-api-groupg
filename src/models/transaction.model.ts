@@ -1,7 +1,7 @@
 import { Document, Schema, model } from "mongoose";
-import { Good, GoodInterface } from "./good.model.js";
-import { Hunter, HunterInterface } from "./hunter.model.js";
-import { Merchant, MerchantInterface } from "./merchant.model.js";
+import { GoodInterface } from "./good.model.js";
+import { HunterInterface } from "./hunter.model.js";
+import { MerchantInterface } from "./merchant.model.js";
 import validator from "validator";
 
 /**
@@ -79,39 +79,6 @@ const TransactionSchema = new Schema<TransactionInterface>({
       }
     },
   },
-});
-
-/**
- * Middleware para calcular el importe total antes de guardar
- */
-TransactionSchema.pre("save", async function (next) {
-  const transaction = this as TransactionInterface;
-
-  // Verificar existencia de cazador/mercader
-  const involved =
-    transaction.involvedType === "Hunter"
-      ? await Hunter.findById(transaction.involvedID)
-      : await Merchant.findById(transaction.involvedID);
-
-  if (!involved) {
-    throw new Error(`${transaction.involvedType} no encontrado`);
-  }
-
-  // Calcular el importe total
-  let totalAmount = 0;
-  for (const detail of transaction.goods) {
-    const good = await Good.findById(detail.goodID);
-    if (!good) {
-      throw new Error(`Bien con ID ${detail.goodID} no encontrado`);
-    }
-    if (transaction.type === "Sell" && good.stock < detail.amount) {
-      throw new Error(`Stock insuficiente para el bien ${good.name}`);
-    }
-    totalAmount += good.value * detail.amount;
-  }
-  transaction.transactionValue = totalAmount;
-
-  next();
 });
 
 export const Transaction = model<TransactionInterface>(

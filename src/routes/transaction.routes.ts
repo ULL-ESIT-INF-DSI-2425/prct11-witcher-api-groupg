@@ -18,26 +18,21 @@ transactionRouter.post("/transactions", async (req, res) => {
   const { goods, involvedName, involvedType, type } = req.body;
 
   try {
-    // Validar cazador o mercader
     const involved = await validateInvolved(involvedName, involvedType, type);
-
-    // Validar bienes y calcular importe total
     const { newGoods, totalValue } = await validateAndProcessGoods(goods, type);
-
     if (newGoods.length === 0) {
       res.status(404).send({ error: "Goods not found or insufficient stock" });
+    } else {
+      const transaction = new Transaction({
+        goods: newGoods,
+        involvedID: involved._id,
+        involvedType,
+        type,
+        transactionValue: totalValue,
+      });
+      await transaction.save();
+      res.status(201).send(transaction);
     }
-    // Crear transacción
-    const transaction = new Transaction({
-      goods: newGoods,
-      involvedID: involved._id,
-      involvedType,
-      type,
-      transactionValue: totalValue,
-    });
-
-    await transaction.save();
-    res.status(201).send(transaction);
   } catch (error) {
     res.status(500).send(error);
   }
@@ -48,60 +43,85 @@ async function validateInvolved(
   involvedType: "Hunter" | "Merchant",
   type: "Buy" | "Sell",
 ) {
-  let involved;
-  if (involvedType === "Hunter" && type === "Buy") {
-    involved = await Hunter.findOne({ name });
-    if (!involved) throw new Error("Cazador no encontrado");
-  } else if (involvedType === "Merchant" && type === "Sell") {
-    involved = await Merchant.findOne({ name });
-    if (!involved) throw new Error("Mercader no encontrado");
-  } else {
-    throw new Error(
-      "Un cazador no puede comprar y un mercader no puede vender",
-    );
+  try {
+    let involved;
+    if (involvedType === "Hunter" && type === "Buy") {
+      involved = await Hunter.findOne({ name });
+      if (!involved) {
+        const hunter = new Hunter({
+          name,
+          race: "No especificado",
+          location: "No especificado",
+        });
+        await hunter.save();
+        involved = hunter;
+      }
+    } else if (involvedType === "Merchant" && type === "Sell") {
+      involved = await Merchant.findOne({ name });
+      if (!involved) {
+        const merchant = new Merchant({
+          name,
+          type: "No especificado",
+          location: "No especificado",
+        });
+        await merchant.save();
+        involved = merchant;
+      }
+    } else {
+      throw new Error(
+        "Un cazador no puede vender y un mercader no puede comprar",
+      );
+    }
+    return involved;
+  } catch (error) {
+    throw new Error(`Error al validar el involucrado: ${error.message}`);
   }
-  return involved;
 }
 
+// Buy -> El cazador compra bienes
+// Sell -> El mercader vende bienes
 async function validateAndProcessGoods(
   goods: { name: string; amount: number }[],
   type: "Buy" | "Sell",
 ) {
-  const newGoods = [];
-  let totalValue = 0;
-  for (const { name, amount } of goods) {
-    const good = await Good.findOne({ name });
-    if (type === "Buy") {
-      if (!good) continue;
-      else if (good.stock < amount) continue;
-      else {
-        good.stock -= amount;
-        await good.save();
-        newGoods.push({ goodID: good._id, amount });
-        totalValue += good.value * amount;
-      }
-    } else if (type === "Sell") {
-      if (!good) {
-        const newGood = new Good({
-          name,
-          description: "Bien creado automáticamente",
-          material: "Material desconocido",
-          weight: 10,
-          stock: amount,
-          value: 100,
-        });
-        await newGood.save();
-        newGoods.push({ goodID: newGood._id, amount });
-        totalValue += good.value * amount;
-      } else {
-        good.stock += amount;
-        await good.save();
-        newGoods.push({ goodID: good._id, amount });
-        totalValue += good.value * amount;
+  try {
+    const newGoods = [];
+    let totalValue = 0;
+    for (const { name, amount } of goods) {
+      const good = await Good.findOne({ name });
+      if (type === "Buy") {
+        if (!good || good.stock < amount) continue;
+        else {
+          const newStock = good.stock - amount;
+          await Good.updateOne({ name: good.name }, { stock: newStock });
+          newGoods.push({ goodID: good._id, amount });
+          totalValue += good.value * amount;
+        }
+      } else if (type === "Sell") {
+        if (!good) {
+          const newGood = new Good({
+            name,
+            description: "Bien creado automáticamente",
+            material: "Desconocido",
+            weight: 10,
+            stock: amount,
+            value: 100,
+          });
+          await newGood.save();
+          newGoods.push({ goodID: newGood._id, amount });
+          totalValue += newGood.value * amount;
+        } else {
+          const newStock = good.stock + amount;
+          await Good.updateOne({ name: good.name }, { stock: newStock });
+          newGoods.push({ goodID: good._id, amount });
+          totalValue += good.value * amount;
+        }
       }
     }
+    return { newGoods, totalValue };
+  } catch (error) {
+    throw new Error(`Error validating and processing goods: ${error.message}`);
   }
-  return { newGoods, totalValue };
 }
 
 /**
@@ -168,45 +188,6 @@ transactionRouter.get("/transactions/:id", async (req, res) => {
     res.status(200).send(transaction);
   } catch (error) {
     res.status(500).send(error);
-  }
-});
-
-/**
- * @route GET /transactions/involved/:name
- * @description Obtiene transacciones relacionadas con un cazador o mercader por su nombre.
- * @access Public
- * @param {string} req.params.name - Nombre del cazador o mercader.
- * @returns {Object} 200 - Lista de transacciones encontradas.
- * @returns {Object} 404 - Cazador o mercader no encontrado.
- * @returns {Object} 400 - Error en la solicitud.
- */
-transactionRouter.get("/transactions/involved/:name", async (req, res) => {
-  const { name } = req.params;
-
-  try {
-    const hunter = await Hunter.findOne({ name });
-    if (!hunter) {
-      throw new Error("Hunter not found");
-    }
-    const merchant = await Merchant.findOne({ name });
-    if (!merchant) {
-      throw new Error("Merchant not found");
-    }
-
-    if (!hunter && !merchant) {
-      res.status(404).send({ error: "Cazador o mercader no encontrado" });
-    }
-
-    const involvedId = hunter ? hunter._id : merchant._id;
-    const involvedType = hunter ? "Hunter" : "Merchant";
-
-    const transactions = await Transaction.find({
-      involvedId,
-      involvedType,
-    }).populate("goodDetails.goodId");
-    res.send(transactions);
-  } catch (error) {
-    res.status(400).send({ error: error.message });
   }
 });
 

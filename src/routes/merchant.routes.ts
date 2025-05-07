@@ -91,7 +91,7 @@ merchantRouter.patch("/merchant", async (req, res) => {
       error: "A name must be provided in the query string",
     });
   } else {
-    const allowedUpdates = ["type", "location"];
+    const allowedUpdates = ["name", "type", "location"];
     const updates = Object.keys(req.body);
     const isValidUpdate = updates.every((update) =>
       allowedUpdates.includes(update),
@@ -131,7 +131,7 @@ merchantRouter.patch("/merchant", async (req, res) => {
  * @returns {Object} 404 - Mercader no encontrado.
  */
 merchantRouter.patch("/merchant/:id", async (req, res) => {
-  const allowedUpdates = ["type", "location"];
+  const allowedUpdates = ["name", "type", "location"];
   const updates = Object.keys(req.body);
   const isValidUpdate = updates.every((update) =>
     allowedUpdates.includes(update),

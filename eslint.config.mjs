@@ -20,7 +20,7 @@ export default [
   {
     rules:
     {
-      "tsdoc/syntax": "warn"
+      "tsdoc/syntax": "off"
     }
   },
   {ignores: [
