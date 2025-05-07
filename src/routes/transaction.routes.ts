@@ -137,17 +137,8 @@ async function validateAndProcessGoods(
  * @returns {Object} 400 - Error en la solicitud.
  */
 transactionRouter.get("/transactions", async (req, res) => {
-  const { id, involvedName, startDate, endDate, type } = req.query;
+  const { involvedName, startDate, endDate, type } = req.query;
   try {
-    if (id) {
-      const transaction =
-        await Transaction.findById(id).populate("goodDetails.goodId");
-      if (!transaction) {
-        res.status(404).send({ error: "Transacción no encontrada" });
-      }
-      res.send(transaction);
-    }
-
     const filter: any = {};
     if (involvedName) {
       filter.involvedName = involvedName;
@@ -200,48 +191,54 @@ transactionRouter.get("/transactions/:id", async (req, res) => {
  * @returns {Object} 200 - La transacción actualizada.
  * @returns {Object} 404 - Transacción no encontrada.
  * @returns {Object} 400 - Error en la solicitud.
+ * {
+ *  "goods": [
+ * }
  */
 transactionRouter.patch("/transactions/:id", async (req, res) => {
-  const { id } = req.params;
-  const updates = req.body;
-
   try {
-    const transaction = await Transaction.findById(id);
+    const { goods: updatedGoods } = req.body;
+    const transaction = await Transaction.findById(req.params.id);
     if (!transaction) {
-      res.status(404).send({ error: "Transacción no encontrada" });
-    }
-
-    // Revertir stock de bienes antes de actualizar
-    for (const detail of transaction.goods) {
-      const good = await Good.findById(detail.goodID);
-      if (transaction.type === "Sell") {
-        good.stock += detail.amount;
-      } else {
-        good.stock -= detail.amount;
-      }
-      await good.save();
-    }
-
-    Object.assign(transaction, updates);
-
-    // Actualizar stock de bienes con nuevos valores
-    for (const detail of transaction.goods) {
-      const good = await Good.findById(detail.goodID);
-      if (transaction.type === "Sell") {
-        if (good.stock < detail.amount) {
-          throw new Error(`Stock insuficiente para el bien ${good.name}`);
+      res.status(404).send({ error: "Transacción no encontrada." });
+    } else {
+      let totalValue = 0;
+      for (const originalItem of transaction.goods) {
+        const goodName = originalItem.goodID.name;
+        const updatedItem = updatedGoods.find(
+          (item) => item.name === goodName
+        );
+        if (!updatedItem) {
+          res.status(400).send({
+            error: `No se pueden eliminar ni añadir bienes. Bien omitido: ${goodName}`,
+          });
         }
-        good.stock -= detail.amount;
-      } else {
-        good.stock += detail.amount;
+        const good = await Good.findOne({ name: goodName });
+        if (!good) continue;
+        const oldAmount = originalItem.amount;
+        const newAmount = updatedItem.amount;
+        const diff = newAmount - oldAmount;
+        if (transaction.type === "Buy" && good.stock < diff) {
+          res.status(400).send({
+            error: `Stock insuficiente para "${good.name}". Stock actual: ${good.stock}`,
+          });
+        }
+        if (transaction.type === "Buy") {
+          good.stock -= diff;
+        } else {
+          good.stock += diff;
+        }
+        await good.save();
+        originalItem.amount = newAmount;
+        totalValue += good.value * newAmount;
       }
-      await good.save();
+      transaction.transactionValue = totalValue;
+      transaction.date = new Date();
+      await transaction.save();
+      res.status(200).send(transaction);
     }
-
-    await transaction.save();
-    res.send(transaction);
   } catch (error) {
-    res.status(400).send({ error: error.message });
+    res.status(500).send({ error: error.message });
   }
 });
 
@@ -266,12 +263,17 @@ transactionRouter.delete("/transactions/:id", async (req, res) => {
     // Revertir stock de bienes
     for (const detail of transaction.goods) {
       const good = await Good.findById(detail.goodID);
+      if (!good) {
+        throw new Error(`Good not found: ${detail.goodID}`);
+      }
+      // Revertir el stock según el tipo de transacción
+      /*
       if (transaction.type === "Sell") {
         good.stock += detail.amount;
       } else {
         good.stock -= detail.amount;
       }
-      await good.save();
+      await good.save();*/
     }
 
     await Transaction.deleteOne({ _id: transaction._id });

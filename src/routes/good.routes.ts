@@ -227,7 +227,7 @@ goodRouter.delete("/goods/:id", async (req, res) => {
   try {
     const good = await Good.findByIdAndDelete(req.params.id);
     if (!good) {
-      res.status(404).send();
+      res.status(404).send({ error: "Good not found" });
     } else {
       res.status(200).send(good);
     }

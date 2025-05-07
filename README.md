@@ -4,8 +4,9 @@
 
 
 Transactions:
-POST: localhost:3000/transactions
-Bo
+POST
+localhost:3000/transactions
+Body:
 {
   "goods": [
     {
@@ -21,3 +22,6 @@ Bo
   "involvedType": "Hunter",
   "type": "Buy"
 }
+GET
+localhost:3000/transactions/id
+localhost:3000/transactions/?name=xxx&type=xxx
