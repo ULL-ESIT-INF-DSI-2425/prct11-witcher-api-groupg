@@ -27,23 +27,13 @@ export interface HunterInterface extends Document {
   location: string;
 }
 
-const validateName = (value: string) => {
+const validation = (value: string) => {
   if (!value.match(/^[A-ZÁÉÍÓÚÑ]/)) {
-    throw new Error("El nombre del cliente debe comenzar con una letra mayúscula.");
+    throw new Error("El nombre y la localizacion del cliente deben comenzar con una letra mayúscula.");
   } else if (!validator.isAlpha(value, "es-ES", { ignore: " " })) {
-    throw new Error("El nombre del cliente solo puede contener letras y espacios.");
+    throw new Error("El nombre y la localizacion del cliente solo pueden contener letras y espacios.");
   } else if (!validator.isLength(value, { min: 2, max: 30 })) {
-    throw new Error("El nombre del cliente debe tener entre 2 y 30 caracteres.");
-  }
-};
-
-const validateLocation = (value: string) => {
-  if (!value.match(/^[A-ZÁÉÍÓÚÑ]/)) {
-    throw new Error("La ubicación del cliente debe comenzar con una letra mayúscula.");
-  } else if (!validator.isAlphanumeric(value, "es-ES", { ignore: " " })) {
-    throw new Error("La ubicación del cliente solo puede contener letras, números y espacios.");
-  } else if (!validator.isLength(value, { min: 2, max: 30 })) {
-    throw new Error("La ubicación del cliente debe tener entre 2 y 30 caracteres.");
+    throw new Error("El nombre y la localizacion del cliente deben tener entre 2 y 30 caracteres.");
   }
 };
 
@@ -53,7 +43,7 @@ const HunterSchema = new Schema<HunterInterface>({
     required: true,
     trim: true,
     unique: true,
-    validate: validateName,
+    validate: validation,
   },
   race: {
     type: String,
@@ -78,7 +68,7 @@ const HunterSchema = new Schema<HunterInterface>({
     type: String,
     required: true,
     trim: true,
-    validate: validateLocation,
+    validate: validation,
   }
 });
 
