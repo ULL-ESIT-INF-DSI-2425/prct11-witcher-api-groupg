@@ -5,7 +5,7 @@ import { Hunter } from "../src/models/hunter.model.js";
 
 const sampleHunter = {
   name: "Geralt",
-  type: "hunter",
+  race: "Cazador",
   location: "Kaer Morhen",
 };
 
@@ -20,14 +20,14 @@ describe("POST /hunter", () => {
       .post("/hunter")
       .send({
         name: "Triss",
-        type: "wizard",
+        race: "Hechicero",
         location: "Novigrad",
       })
       .expect(201);
 
     expect(response.body).to.include({
       name: "Triss",
-      type: "wizard",
+      race: "Hechicero",
       location: "Novigrad",
     });
 
@@ -40,12 +40,12 @@ describe("POST /hunter", () => {
     await request(app).post("/hunter").send(sampleHunter).expect(400);
   });
 
-  test("Should fail to create a hunter with invalid type", async () => {
+  test("Should fail to create a hunter with invalid race", async () => {
     await request(app)
       .post("/hunter")
       .send({
         name: "Yennefer",
-        type: "invalid-type",
+        race: "invalid-race",
         location: "Vengerberg",
       })
       .expect(400);

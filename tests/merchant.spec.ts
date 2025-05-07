@@ -5,7 +5,7 @@ import { Merchant } from "../src/models/merchant.model.js";
 
 const sampleMerchant = {
   name: "Hattori",
-  type: "blacksmith",
+  type: "Herrero",
   location: "Novigrad",
 };
 
@@ -20,17 +20,17 @@ describe("POST /merchant", () => {
       .post("/merchant")
       .send({
         name: "Zoltan",
-        type: "general merchant",
+        type: "General",
         location: "Vergen",
       })
       .expect(201);
 
     expect(response.body).to.include({
       name: "Zoltan",
-      type: "general merchant",
+      type: "General",
       location: "Vergen",
     });
-
+    
     const merchantInDb = await Merchant.findById(response.body._id);
     expect(merchantInDb).not.toBe(null);
     expect(merchantInDb!.name).to.equal("Zoltan");
