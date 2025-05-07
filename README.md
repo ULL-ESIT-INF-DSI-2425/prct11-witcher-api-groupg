@@ -26,6 +26,93 @@ GET
 localhost:3000/transactions/id
 localhost:3000/transactions/?name=xxx&type=xxx
 
+# ⚔️ API REST La Posada del Lobo Blanco ⚔️ 
+
+## ✍️ Autores
+- 👤 **Jonathan Martínez Pérez - alu0101254098@ull.edu.es**
+- 👤 **José Ángel Mederos Rivas - alu0101368832@ull.edu.es**
+- 👤 **Joel Saavedra Páez - alu0101437415@ull.edu.es**
+
+## 📜 Descripción del Proyecto  
+Este sistema se encarga de gestionar el inventario de la Posada del Lobo Blanco, del mundo de The Witcher. Su objetivo es facilitar la administración de recursos, permitiendo el registro, consulta y control de bienes, mercaderes, clientes y transacciones.   
+Se utilizará la extensión de Visual Studio **POSTMAN** para realizar las HTTP Requests  
+Se hace uso de **MongoDB** para ofrecer una base de datos en la que almacenar los diferentes objetos.
+
+## 🔍 Elementos del Sistema
+
+### 📦 Bien
+Un bien consta de los siguientes atributos:
+- Un **ID** único que permita identificarlo.
+- Su **nombre**.
+- Una **descripción** que refleje la historia y utilidad del bien.
+- El **material** de que está hecho.
+- Su **peso**.
+- Su **valor** en coronas.
+
+### 🧒 Cliente
+Un cliente tiene los siguientes atributos:
+- Su **nombre**.
+- Su **raza**(humano, elfo, enano...).
+- La **ubicación** en la que se encuentra.
+
+### 🧒 Mercader
+Un mercader tiene los siguientes atributos:
+- Su **nombre**.
+- Su **tipo**(herrero, alquimista, general...).
+- La **ubicación** en la que se encuentra.
+
+### 💰 Transacción
+Una transacción deberá contemplar los siguientes atributos:
+- El **tipo** de transacción. Podemos diferenciar 2 tipos:
+  - Venta realizada a un mercader.
+  - Compra realizada a un cliente.
+- La **fecha** en la que se realiza la transacción.
+- La lista de **bienes** intercambiados.
+- La cantidad de **coronas** involucradas en la transacción.
+- El **involucrado**, siendo este el mercader en caso de compra o el cliente en caso de venta. 
+
+## ⚙️ Requisitos del Sistema  
+Antes de proceder con la instalación, asegúrate de contar con los siguientes requisitos:  
+
+| Requisito  | Versión Recomendada |
+|------------|---------------------|
+| 🟢 **Node.js**  | `>= 22.0.0` |
+| 🔴 **npm**  | `>= 9.0.0` |
+| 🔵 **TypeScript** | `>= 5.0.0` |
+
+---
+
+## </> Obtener el Código 
+Para obtener el código fuente debes clonar este repositorio, para ello ejecuta el siguiente comando:  
+
+```sh
+git clone https://github.com/ULL-ESIT-INF-DSI-2425/prct11-witcher-api-groupg.git
+cd prct11-witcher-api-groupg
+```
+
+---
+
+## 🛠 Dependencias 
+Este programa necesita una serie de dependencias para funcionar, entre ellas se encuentran: TSDoc, Inquirer.js, Vitest, LowDB, entre otras.
+Ejecuta el siguiente comando para instalar todas las dependencias necesarias:  
+
+```sh
+npm install
+```
+
+---
+
+## 💾 Base de Datos
+Utilizaremos un cluster en Mongo Atlas para al almacenar los bienes, los mercaderes, los clientes y las transacciones.
+
+## 🚀 Ejecución
+Para compilar y ejecutar el sistema ejecuta el siguiente comando:  
+
+```sh
+tsc
+npm run start
+```
+
 ## 📦 Goods API
 
 ### **POST** `/goods`
