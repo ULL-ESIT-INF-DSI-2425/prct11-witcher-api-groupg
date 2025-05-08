@@ -139,6 +139,24 @@ async function validateAndProcessGoods(
 }
 
 /**
+ * @route GET /transactions
+ * @description Gets all transactions with optional filters
+ * @param {string} [req.query.type] - Type of transaction (Buy/Sell)
+ * @returns {Object} 200 - Array of transactions
+ * @returns {Object} 500 - Server error
+ */
+transactionRouter.get("/transactions", async (req, res) => {
+  try {
+    const { type } = req.query;
+    const filter = type ? { type } : {};
+    const transactions = await Transaction.find(filter);
+    res.status(200).send(transactions);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
+/**
  * @route GET /transactions/by-name
  * @description Shows the transactions filtered by name.
  * @param {string} [req.query.name] - Hunter or Merchant name to filter transactions.
