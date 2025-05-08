@@ -496,7 +496,25 @@ Elimina un mercader por su ID.
 ## 🔁 Transactions API
 
 ### **POST** `/transactions`
-
+De los bienes especificados se meterán en la transaccion los que existan o los que tengan stock, el resto se ignorarán, si no hay stock de ninguno o ninguno existe se mostrará un error
+#### 🔸 Body:
+```json
+{
+    "goods": [
+        {
+            "name": "Espada",
+            "amount": 20
+        },
+        {
+            "name": "Escudo",
+            "amount": 1
+        }
+    ],
+    "involvedName": "XX",
+    "involvedType": "Hunter",
+    "type": "Buy"
+}
+```
 ### **GET** `/transactions`
 
 ### **GET** `/transactions/:id`

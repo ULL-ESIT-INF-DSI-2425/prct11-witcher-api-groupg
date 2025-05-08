@@ -1,6 +1,6 @@
-import { describe, test, beforeEach, expect } from "vitest";
+import { describe, test, beforeEach, afterEach, expect } from "vitest";
 import request from "supertest";
-import app from "../src/index.js";
+import { app } from "../src/app.js";
 import { Transaction } from "../src/models/transaction.model.js";
 import { Good } from "../src/models/good.model.js";
 import { Hunter } from "../src/models/hunter.model.js";
@@ -54,6 +54,13 @@ beforeEach(async () => {
   }).save();
 });
 
+afterEach(async () => {
+  await Transaction.deleteMany();
+  await Hunter.deleteMany();
+  await Merchant.deleteMany();
+  await Good.deleteMany();
+});
+
 describe("GET /transactions/:id", () => {
   test("Should get a transaction by ID", async () => {
     const transaction = await Transaction.findOne();
@@ -63,7 +70,7 @@ describe("GET /transactions/:id", () => {
 
     expect(response.body).to.include({
       type: transaction!.type,
-      amount: transaction!.amount,
+      amount: transaction!.transactionValue,
     });
   });
 
@@ -107,7 +114,7 @@ describe("PATCH /transactions/:id", () => {
     expect(response.body.amount).to.equal(1500);
 
     const updatedTransaction = await Transaction.findById(transaction!._id);
-    expect(updatedTransaction!.amount).to.equal(1500);
+    expect(updatedTransaction!.transactionValue).to.equal(1500);
   });
 
   test("Should fail to update a transaction with invalid fields", async () => {

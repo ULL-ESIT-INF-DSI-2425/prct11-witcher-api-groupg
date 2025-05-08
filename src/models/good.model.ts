@@ -2,36 +2,46 @@ import { Document, Schema, model } from "mongoose";
 import validator from "validator";
 
 /**
- * Representa un bien en el sistema.
+ * Represents a good in the database.
  * @interface GoodInterface
- * @property {string} name - Nombre del bien.
- * @property {string} description - Descripción del bien.
- * @property {string} material - Material del bien.
- * @property {number} weight - Peso del bien.
- * @property {number} stock - Cantidad de bienes disponibles.
- * @property {number} value - Valor en coronas del bien.
- * @extends Document (de Mongoose)
+ * @property {string} name - Good name.
+ * @property {string} description - Good description.
+ * @property {string} material - Good material.
+ * @property {number} weight - Good weight in kilograms.
+ * @property {number} stock - Good stock quantity.
+ * @property {number} value - Good value.
+ * @extends Document (Mongoose)
  */
 export interface GoodInterface extends Document {
   name: string;
   description: string;
   material:
-    | "Acero"
-    | "Madera"
-    | "Piedra"
-    | "Hierro"
-    | "Cuero"
-    | "Tela"
-    | "Vidrio"
-    | "Bronce"
-    | "Plata"
-    | "Oro"
-    | "Desconocido";
+    | "Steel"
+    | "Wood"
+    | "StoneStone"
+    | "Iron"
+    | "Leather"
+    | "Cloth"
+    | "Glass"
+    | "Bronze"
+    | "Silver"
+    | "Gold"
+    | "Uknowkn";
   weight: number;
   stock: number;
   value: number;
 }
 
+/**
+ * Mongoose schema for the Good model.
+ * @type {Schema}
+ * @property {String} name - Good name.
+ * @property {String} description - Good description.
+ * @property {String} material - Good material.
+ * @property {Number} weight - Good weight in kilograms.
+ * @property {Number} stock - Good stock quantity.
+ * @property {Number} value - Good value.
+ */
 const GoodSchema = new Schema<GoodInterface>({
   name: {
     unique: true,
@@ -42,15 +52,15 @@ const GoodSchema = new Schema<GoodInterface>({
       const startsWithUppercase = /^[A-ZÁÉÍÓÚÑ]/
       if (!startsWithUppercase.exec(value)) {
         throw new Error(
-          "El nombre del bien debe comenzar con una letra mayúscula.",
+          "Good name must start with an uppercase letter.",
         );
       } else if (!validator.isAlpha(value, "es-ES", { ignore: " " })) {
         throw new Error(
-          "El nombre del bien solo puede contener letras y espacios.",
+          "Good name can only contain letters and spaces.",
         );
       } else if (!validator.isLength(value, { min: 2, max: 30 })) {
         throw new Error(
-          "El nombre del bien debe tener entre 2 y 30 caracteres.",
+          "Good name must be between 2 and 30 characters.",
         );
       }
     },
@@ -63,15 +73,15 @@ const GoodSchema = new Schema<GoodInterface>({
       const startsWithUppercase = /^[A-ZÁÉÍÓÚÑ]/;
       if (!startsWithUppercase.exec(value)) {
         throw new Error(
-          "La descripción del bien debe comenzar con una letra mayúscula.",
+          "Good description must start with an uppercase letter.",
         );
       } else if (!validator.isAlphanumeric(value, "es-ES", { ignore: " " })) {
         throw new Error(
-          "La descripción del bien solo puede contener letras, números y espacios.",
+          "Good description can only contain letters, numbers, and spaces.",
         );
       } else if (!validator.isLength(value, { min: 10, max: 100 })) {
         throw new Error(
-          "El nombre del bien debe tener entre 10 y 100 caracteres.",
+          "Good description must be between 10 and 100 characters.",
         );
       }
     },
@@ -81,17 +91,17 @@ const GoodSchema = new Schema<GoodInterface>({
     required: true,
     trim: true,
     enum: [
-      "Acero",
-      "Madera",
-      "Piedra",
-      "Hierro",
-      "Cuero",
-      "Tela",
-      "Vidrio",
-      "Bronce",
-      "Plata",
-      "Oro",
-      "Desconocido",
+      "Steel",
+      "Wood",
+      "StoneStone",
+      "Iron",
+      "Leather",
+      "Cloth",
+      "Glass",
+      "Bronze",
+      "Silver",
+      "Gold",
+      "Uknowkn",
     ],
   },
   weight: {
@@ -99,7 +109,7 @@ const GoodSchema = new Schema<GoodInterface>({
     required: true,
     validate: (value: number) => {
       if (value <= 0) {
-        throw new Error("El peso del bien debe ser mayor que 0.");
+        throw new Error("Weight must be greater than 0.");
       }
     },
   },
@@ -109,7 +119,7 @@ const GoodSchema = new Schema<GoodInterface>({
     validate: (value: number) => {
       if (!validator.isInt(value.toString(), { min: 1 })) {
         throw new Error(
-          "El stock del bien debe ser un número entero positivo.",
+          "Good stock must be a positive integer.",
         );
       }
     },
@@ -119,7 +129,7 @@ const GoodSchema = new Schema<GoodInterface>({
     required: true,
     validate: (value: number) => {
       if (value <= 0) {
-        throw new Error("El valor del bien debe ser mayor que 0.");
+        throw new Error("Good value must be greater than 0.");
       }
     },
   },

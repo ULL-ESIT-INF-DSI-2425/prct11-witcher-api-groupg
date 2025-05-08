@@ -2,40 +2,54 @@ import { Document, Schema, model } from "mongoose";
 import validator from "validator";
 
 /**
- * Representa un mercader en el sistema.
+ * Represents a merchant.
  * @interface MerchantInterface
- * @property {string} name - Nombre del mercader.
- * @property {string} type - Tipo de mercader.
- * @property {string} location - Ubicación del mercader.
- * @extends Document (de Mongoose)
+ * @property {string} name - Merchant name.
+ * @property {string} type - Merchant type.
+ * @property {string} location - Merchant location.
+ * @extends Document (Mongoose)
  */
 export interface MerchantInterface extends Document {
   name: string;
   type:
     | "General"
-    | "Alquimista"
-    | "Herrero"
-    | "Cazador"
-    | "Armero"
-    | "Artesano"
-    | "Sastre"
-    | "Joyero"
-    | "Mago"
-    | "No especificado";
+    | "Alchemist"
+    | "Blacksmith"
+    | "Gunsmith"
+    | "Craftman"
+    | "Tailor"
+    | "Jeweler"
+    | "Mage"
+    | "Uknown";
   location: string;
 }
 
+/**
+ * This function validates the name and location of the merchant.
+ * @param value - The value to validate.
+ * - It must start with an uppercase letter.
+ * - It must only contain letters and spaces.
+ * - It must be between 2 and 30 characters long.
+ * @throws {Error} If the value does not meet the validation criteria.
+ */
 const validation = (value: string) => {
   const upperCase = /^[A-ZÁÉÍÓÚÑ]/
   if (!upperCase.exec(value)) {
-    throw new Error("El nombre y la localizacion del mercader deben comenzar con una letra mayúscula.");
+    throw new Error("Merchant name and location must start with an uppercase letter.");
   } else if (!validator.isAlpha(value, "es-ES", { ignore: " " })) {
-    throw new Error("El nombre y la localizacion del mercader solo pueden contener letras y espacios.");
+    throw new Error("Merchant name and location must only contain letters and spaces.");
   } else if (!validator.isLength(value, { min: 2, max: 30 })) {
-    throw new Error("El nombre y la localizacion del mercader deben tener entre 2 y 30 caracteres.");
+    throw new Error("Merchant name and location must be between 2 and 30 characters long.");
   }
 };
 
+/**
+ * Mongoose schema for the Merchant model.
+ * @type {Schema}
+ * @property {String} name - Merchant name.
+ * @property {String} type - Merchant type.
+ * @property {String} location - Merchant location.
+ */
 const MerchantSchema = new Schema<MerchantInterface>({
   name: {
     type: String,
@@ -50,15 +64,14 @@ const MerchantSchema = new Schema<MerchantInterface>({
     required: true,
     enum: [
       "General",
-      "Alquimista",
-      "Herrero",
-      "Cazador",
-      "Armero",
-      "Artesano",
-      "Sastre",
-      "Joyero",
-      "Mago",
-      "No especificado",
+      "Alchemist",
+      "Blacksmith",
+      "Gunsmith",
+      "Craftman",
+      "Tailor",
+      "Jeweler",
+      "Mage",
+      "Uknown",
     ],
   },
   location: {

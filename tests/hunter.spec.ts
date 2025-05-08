@@ -1,6 +1,6 @@
-import { describe, test, beforeEach, expect } from "vitest";
+import { describe, test, beforeEach, afterEach, expect } from "vitest";
 import request from "supertest";
-import app from "../src/index.js";
+import { app } from "../src/app.js";
 import { Hunter } from "../src/models/hunter.model.js";
 
 const sampleHunter = {
@@ -14,10 +14,14 @@ beforeEach(async () => {
   await new Hunter(sampleHunter).save();
 });
 
-describe("POST /hunter", () => {
+afterEach(async () => {
+  await Hunter.deleteMany();
+});
+
+describe("POST /hunters", () => {
   test("Should successfully create a new hunter", async () => {
     const response = await request(app)
-      .post("/hunter")
+      .post("/hunters")
       .send({
         name: "Triss",
         race: "Hechicero",
@@ -37,12 +41,12 @@ describe("POST /hunter", () => {
   });
 
   test("Should fail to create a hunter with duplicate name", async () => {
-    await request(app).post("/hunter").send(sampleHunter).expect(400);
+    await request(app).post("/hunters").send(sampleHunter).expect(400);
   });
 
   test("Should fail to create a hunter with invalid race", async () => {
     await request(app)
-      .post("/hunter")
+      .post("/hunters")
       .send({
         name: "Yennefer",
         race: "invalid-race",
@@ -52,39 +56,39 @@ describe("POST /hunter", () => {
   });
 });
 
-describe("GET /hunter", () => {
+describe("GET /hunters", () => {
   test("Should get hunters by query parameters", async () => {
-    const response = await request(app)
-      .get("/hunter?name=Geralt")
-      .expect(200);
+    const response = await request(app).get("/hunters?name=Geralt").expect(200);
 
     expect(response.body).toHaveLength(1);
     expect(response.body[0]).to.include(sampleHunter);
   });
 
   test("Should return 404 if no hunters match the query", async () => {
-    await request(app).get("/hunter?name=Unknown").expect(404);
+    await request(app).get("/hunters?name=Unknown").expect(404);
   });
 });
 
-describe("GET /hunter/:id", () => {
+describe("GET /hunters/:id", () => {
   test("Should get a hunter by ID", async () => {
     const hunter = await Hunter.findOne({ name: "Geralt" });
-    const response = await request(app).get(`/hunter/${hunter!._id}`).expect(200);
+    const response = await request(app)
+      .get(`/hunters/${hunter!._id}`)
+      .expect(200);
 
     expect(response.body).to.include(sampleHunter);
   });
 
   test("Should return 404 if hunter ID does not exist", async () => {
-    await request(app).get("/hunter/645c1b2f4f1a2567e8d9f000").expect(404);
+    await request(app).get("/hunters/645c1b2f4f1a2567e8d9f000").expect(404);
   });
 });
 
-describe("PATCH /hunter/:id", () => {
+describe("PATCH /hunters/:id", () => {
   test("Should update a hunter by ID", async () => {
     const hunter = await Hunter.findOne({ name: "Geralt" });
     const response = await request(app)
-      .patch(`/hunter/${hunter!._id}`)
+      .patch(`/hunters/${hunter!._id}`)
       .send({ location: "Novigrad" })
       .expect(200);
 
@@ -97,29 +101,29 @@ describe("PATCH /hunter/:id", () => {
   test("Should fail to update with invalid fields", async () => {
     const hunter = await Hunter.findOne({ name: "Geralt" });
     await request(app)
-      .patch(`/hunter/${hunter!._id}`)
+      .patch(`/hunters/${hunter!._id}`)
       .send({ invalidField: "value" })
       .expect(400);
   });
 
   test("Should return 404 if hunter ID does not exist", async () => {
     await request(app)
-      .patch("/hunter/645c1b2f4f1a2567e8d9f000")
+      .patch("/hunters/645c1b2f4f1a2567e8d9f000")
       .send({ location: "Novigrad" })
       .expect(404);
   });
 });
 
-describe("DELETE /hunter/:id", () => {
+describe("DELETE /hunters/:id", () => {
   test("Should delete a hunter by ID", async () => {
     const hunter = await Hunter.findOne({ name: "Geralt" });
-    await request(app).delete(`/hunter/${hunter!._id}`).expect(200);
+    await request(app).delete(`/hunters/${hunter!._id}`).expect(200);
 
     const deletedHunter = await Hunter.findById(hunter!._id);
     expect(deletedHunter).toBe(null);
   });
 
   test("Should return 404 if hunter ID does not exist", async () => {
-    await request(app).delete("/hunter/645c1b2f4f1a2567e8d9f000").expect(404);
+    await request(app).delete("/hunters/645c1b2f4f1a2567e8d9f000").expect(404);
   });
 });

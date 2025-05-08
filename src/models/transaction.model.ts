@@ -5,17 +5,17 @@ import { MerchantInterface } from "./merchant.model.js";
 import validator from "validator";
 
 /**
- * Representa una transacción entre un Cazador/Mercader y el sistema.
+ * Represents a transaction between a hunter/merchant and the system.
  * @interface TransactionInterface
- * @property {Array} goods - Bienes involucrados en la transacción
- * @property {string} goodcurrentGoods.goodID - ID del bien.
- * @property {number} goodcurrentGoods.amount - Cantidad de bienes.
- * @property {string} involvedID - ID del cazador o mercader involucrado.
- * @property {string} involvedType - Tipo de involucrado ("Hunter" o "Merchant").
- * @property {string} type - Tipo de transacción ("Buy" o "Sell").
- * @property {Date} date - Fecha de la transacción.
- * @property {number} transactionValue - Importe total de la transacción.
- * @extends Document (de Mongoose)
+ * @property {Array} goods - Goods involved in the transaction.
+ * @property {string} goodcurrentGoods.goodID - Good ID of the item involved in the transaction.
+ * @property {number} goodcurrentGoods.amount - Amount of goods involved in the transaction.
+ * @property {string} involvedID - ID of the involved (hunter or merchant).
+ * @property {string} involvedType - Type of the involved ("Hunter" or "Merchant").
+ * @property {string} type - Type of transaction ("Buy" or "Sell").
+ * @property {Date} date - Date of the transaction.
+ * @property {number} transactionValue - Total value of the transaction.
+ * @extends Document (Mongoose)
  */
 export interface TransactionInterface extends Document {
   goods: { goodID: GoodInterface; amount: number }[];
@@ -26,6 +26,18 @@ export interface TransactionInterface extends Document {
   transactionValue: number;
 }
 
+/**
+ * Mongoose schema for the Transaction model.
+ * @type {Schema}
+ * @property {Array} goods - Goods involved in the transaction.
+ * @property {Schema.Types.ObjectId} goods.goodID - Good ID of the item involved in the transaction.
+ * @property {Number} goods.amount - Amount of goods involved in the transaction.
+ * @property {Schema.Types.ObjectId} involvedID - ID of the involved (hunter or merchant).
+ * @property {String} involvedType - Type of the involved ("Hunter" or "Merchant").
+ * @property {String} type - Type of transaction ("Buy" or "Sell").
+ * @property {Date} date - Date of the transaction.
+ * @property {Number} transactionValue - Total value of the transaction.
+ */
 const TransactionSchema = new Schema<TransactionInterface>({
   goods: [
     {
@@ -39,9 +51,7 @@ const TransactionSchema = new Schema<TransactionInterface>({
         required: true,
         validate: (value: number) => {
           if (!validator.isInt(value.toString(), { min: 1 })) {
-            throw new Error(
-              "La cantidad de bienes debe ser un número entero mayor que 0",
-            );
+            throw new Error("Good amount must be a positive integer.");
           }
         },
       },
@@ -75,7 +85,9 @@ const TransactionSchema = new Schema<TransactionInterface>({
     default: 0,
     validate: (value: number) => {
       if (value < 0) {
-        throw new Error("El valor del bien debe ser mayor o igual que 0.");
+        throw new Error(
+          "Transaction value must be greater than or equal to 0.",
+        );
       }
     },
   },

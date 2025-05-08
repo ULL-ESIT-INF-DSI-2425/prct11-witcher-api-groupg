@@ -4,35 +4,33 @@ import { Merchant } from "../models/merchant.model.js";
 export const merchantRouter = express.Router();
 
 /**
- * @route POST /merchant
- * @description Crea un nuevo mercader.
- * @access Public
- * @param {Object} req.body - Datos del mercader a crear.
- * @returns {Object} 201 - El mercader creado.
- * @returns {Object} 400 - Error en la solicitud.
+ * @route POST /merchants
+ * @description Create a new merchant.
+ * @param {Object} req.body - Merchant object to be created.
+ * @returns {Object} 201 - The created merchant.
+ * @returns {Object} 500 - Server error.
  */
-merchantRouter.post("/merchant", async (req, res) => {
+merchantRouter.post("/merchants", async (req, res) => {
   const merchant = new Merchant(req.body);
   try {
     await merchant.save();
     res.status(201).send(merchant);
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).send({error: error.message});
   }
 });
 
 /**
- * @route GET /merchant
- * @description Obtiene una lista de mercaderes filtrados por nombre, tipo o ubicación.
- * @access Public
- * @param {string} [req.query.name] - Nombre del mercader.
- * @param {string} [req.query.type] - Tipo del mercader.
- * @param {string} [req.query.location] - Ubicación del mercader.
- * @returns {Object} 200 - Lista de mercaderes encontrados.
- * @returns {Object} 404 - No se encontraron mercaderes.
- * @returns {Object} 500 - Error del servidor.
+ * @route GET /merchants
+ * @description Shows the merchants given a filter by query string.
+ * @param {string} [req.query.name] - Merchant name.
+ * @param {string} [req.query.type] - Merchant type.
+ * @param {string} [req.query.location] - Merchant location.
+ * @returns {Object} 200 - The merchants found.
+ * @returns {Object} 404 - No merchants found.
+ * @returns {Object} 500 - Server error.
  */
-merchantRouter.get("/merchant", async (req, res) => {
+merchantRouter.get("/merchants", async (req, res) => {
   const filter_name = req.query.name ? { name: req.query.name.toString() } : {};
   const filter_type = req.query.type ? { type: req.query.type.toString() } : {};
   const filter_location = req.query.location
@@ -47,45 +45,45 @@ merchantRouter.get("/merchant", async (req, res) => {
     const merchant = await Merchant.find(filter);
     if (merchant.length === 0) {
       res.status(404).send({ error: "No merchant found" });
+    } else {
+      res.status(200).send(merchant);
     }
-    res.status(200).send(merchant);
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).send({error: error.message});
   }
 });
 
 /**
- * @route GET /merchant/:id
- * @description Obtiene un mercader específico por su ID.
- * @access Public
- * @param {string} req.params.id - ID del mercader.
- * @returns {Object} 200 - El mercader encontrado.
- * @returns {Object} 404 - Mercader no encontrado.
- * @returns {Object} 400 - Error en la solicitud.
+ * @route GET /merchants/:id
+ * @description Shows a merchant given its ID by dynamic parameter.
+ * @param {string} req.params.id - Merchant ID.
+ * @returns {Object} 200 - The merchant found.
+ * @returns {Object} 404 - Merchant not found.
+ * @returns {Object} 500 - Server error.
  */
-merchantRouter.get("/merchant/:id", async (req, res) => {
+merchantRouter.get("/merchants/:id", async (req, res) => {
   try {
     const merchant = await Merchant.findById(req.params.id);
     if (!merchant) {
       res.status(404).send({ error: "Merchant not found" });
+    } else {
+      res.status(200).send(merchant);
     }
-    res.status(200).send(merchant);
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).send({error: error.message});
   }
 });
 
 /**
- * @route PATCH /merchant
- * @description Actualiza un mercader utilizando su ID proporcionado en la query string.
- * @access Public
- * @param {string} req.query.name - Nombre del mercader a actualizar.
- * @param {Object} req.body - Campos a actualizar.
- * @returns {Object} 200 - El mercader actualizado.
- * @returns {Object} 400 - Error en la solicitud.
- * @returns {Object} 404 - Mercader no encontrado.
+ * @route PATCH /merchants
+ * @description Updates a merchant using filters like name, type, or location.
+ * @param {string} req.query.name - Merchant name.
+ * @param {Object} req.body - Fields to update.
+ * @returns {Object} 200 - The updated merchant.
+ * @returns {Object} 500 - Server error.
+ * @returns {Object} 404 - Merchant not found.
  */
-merchantRouter.patch("/merchant", async (req, res) => {
+merchantRouter.patch("/merchants", async (req, res) => {
   if (!req.query.name) {
     res.status(400).send({
       error: "A name must be provided in the query string",
@@ -114,23 +112,22 @@ merchantRouter.patch("/merchant", async (req, res) => {
           res.status(200).send(merchant);
         }
       } catch (error) {
-        res.status(500).send(error);
+        res.status(500).send({error: error.message});
       }
     }
   }
 });
 
 /**
- * @route PATCH /merchant/:id
- * @description Actualiza un mercader utilizando su ID proporcionado como parámetro dinámico.
- * @access Public
- * @param {string} req.params.id - ID del mercader a actualizar.
- * @param {Object} req.body - Campos a actualizar.
- * @returns {Object} 200 - El mercader actualizado.
- * @returns {Object} 400 - Error en la solicitud.
- * @returns {Object} 404 - Mercader no encontrado.
+ * @route PATCH /merchants/:id
+ * @description Updates a merchant using its ID given by dynamic parameter.
+ * @param {string} req.params.id - Merchant ID.
+ * @param {Object} req.body - Fields to update.
+ * @returns {Object} 200 - The updated merchant.
+ * @returns {Object} 500 - Server error.
+ * @returns {Object} 404 - Merchant not found.
  */
-merchantRouter.patch("/merchant/:id", async (req, res) => {
+merchantRouter.patch("/merchants/:id", async (req, res) => {
   const allowedUpdates = ["name", "type", "location"];
   const updates = Object.keys(req.body);
   const isValidUpdate = updates.every((update) =>
@@ -150,26 +147,26 @@ merchantRouter.patch("/merchant/:id", async (req, res) => {
       );
       if (!merchant) {
         res.status(404).send({ error: "Merchant not found" });
+      } else {
+        res.status(200).send(merchant);
       }
-      res.status(200).send(merchant);
     } catch (error) {
-      res.status(500).send(error);
+      res.status(500).send({error: error.message});
     }
   }
 });
 
 /**
- * @route DELETE /merchant
- * @description Elimina mercaderes utilizando filtros como nombre, tipo o ubicación.
- * @access Public
- * @param {string} [req.query.name] - Nombre del mercader.
- * @param {string} [req.query.type] - Tipo del mercader.
- * @param {string} [req.query.location] - Ubicación del mercader.
- * @returns {Object} 200 - Información sobre los mercaderes eliminados.
- * @returns {Object} 404 - No se encontraron mercaderes para eliminar.
- * @returns {Object} 500 - Error del servidor.
+ * @route DELETE /merchants
+ * @description Deletes merchants using filters like name, type, or location.
+ * @param {string} [req.query.name] - Merchant name.
+ * @param {string} [req.query.type] - Merchant type.
+ * @param {string} [req.query.location] - Merchant location.
+ * @returns {Object} 200 - The deleted merchants.
+ * @returns {Object} 404 - No merchants found.
+ * @returns {Object} 500 - Server error.
  */
-merchantRouter.delete("/merchant", async (req, res) => {
+merchantRouter.delete("/merchants", async (req, res) => {
   const filter_name = req.query.name ? { name: req.query.name.toString() } : {};
   const filter_type = req.query.type ? { type: req.query.type.toString() } : {};
   const filter_location = req.query.location
@@ -183,7 +180,7 @@ merchantRouter.delete("/merchant", async (req, res) => {
   try {
     const merchant = await Merchant.find(filter);
     if (merchant.length === 0) {
-      res.status(404).send({ error: "No goods found" });
+      res.status(404).send({ error: "Goods not found" });
     } else {
       const result = await Merchant.deleteMany(filter);
       res.status(200).send({
@@ -192,28 +189,28 @@ merchantRouter.delete("/merchant", async (req, res) => {
       });
     }
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).send({error: error.message});
   }
 });
 
 /**
- * @route DELETE /merchant/:id
- * @description Elimina un mercader específico utilizando su ID.
- * @access Public
- * @param {string} req.params.id - ID del mercader a eliminar.
- * @returns {Object} 200 - El mercader eliminado.
- * @returns {Object} 404 - Mercader no encontrado.
- * @returns {Object} 400 - Error en la solicitud.
+ * @route DELETE /merchants/:id
+ * @description Deletes a merchant using its ID given by dynamic parameter.
+ * @param {string} req.params.id - Merchant ID.
+ * @returns {Object} 200 - The deleted merchant.
+ * @returns {Object} 404 - Merchant not found.
+ * @returns {Object} 500 - Server error.
  */
-merchantRouter.delete("/merchant/:id", async (req, res) => {
+merchantRouter.delete("/merchants/:id", async (req, res) => {
   try {
     const merchant = await Merchant.findByIdAndDelete(req.params.id);
     if (!merchant) {
       res.status(404).send({ error: "Merchant not found" });
+    } else {
+      res.status(200).send(merchant);
     }
-    res.status(200).send(merchant);
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).send({error: error.message});
   }
 });
 

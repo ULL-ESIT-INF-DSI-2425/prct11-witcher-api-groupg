@@ -4,35 +4,33 @@ import { Hunter } from "../models/hunter.model.js";
 export const hunterRouter = express.Router();
 
 /**
- * @route POST /hunter
- * @description Crea un nuevo cazador.
- * @access Public
- * @param {Object} req.body - Datos del cazador a crear.
- * @returns {Object} 201 - El cazador creado.
- * @returns {Object} 400 - Error en la solicitud.
+ * @route POST /hunters
+ * @description Create a new hunter.
+ * @param {Object} req.body - Hunter object to be created.
+ * @returns {Object} 201 - The created hunter.
+ * @returns {Object} 500 - Server error.
  */
-hunterRouter.post("/hunter", async (req, res) => {
+hunterRouter.post("/hunters", async (req, res) => {
   const hunter = new Hunter(req.body);
   try {
     await hunter.save();
     res.status(201).send(hunter);
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).send({ error: error.message });
   }
 });
 
 /**
- * @route GET /hunter
- * @description Obtiene una lista de cazadores filtrados por nombre, tipo o ubicación.
- * @access Public
- * @param {string} [req.query.name] - Nombre del cazador.
- * @param {string} [req.query.race] - Tipo del cazador.
- * @param {string} [req.query.location] - Ubicación del cazador.
- * @returns {Object} 200 - Lista de cazadores encontrados.
- * @returns {Object} 404 - No se encontraron cazadores.
- * @returns {Object} 400 - Error en la solicitud.
+ * @route GET /hunters
+ * @description Shows the hunters given a filter by query string.
+ * @param {string} [req.query.name] - Hunter name.
+ * @param {string} [req.query.race] - Hunter race.
+ * @param {string} [req.query.location] - Hunter location.
+ * @returns {Object} 200 - The hunters found.
+ * @returns {Object} 404 - Hunters not found.
+ * @returns {Object} 500 - Server error.
  */
-hunterRouter.get("/hunter", async (req, res) => {
+hunterRouter.get("/hunters", async (req, res) => {
   const filter_name = req.query.name ? { name: req.query.name.toString() } : {};
   const filter_race = req.query.race ? { race: req.query.race.toString() } : {};
   const filter_location = req.query.location
@@ -46,46 +44,46 @@ hunterRouter.get("/hunter", async (req, res) => {
   try {
     const hunters = await Hunter.find(filter);
     if (hunters.length === 0) {
-      res.status(404).send({ error: "No hunters found" });
+      res.status(404).send({ error: "Hunters not found" });
+    } else {
+      res.status(200).send(hunters);
     }
-    res.status(200).send(hunters);
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).send({ error: error.message });
   }
 });
 
 /**
- * @route GET /hunter/:id
- * @description Obtiene un cazador específico por su ID.
- * @access Public
- * @param {string} req.params.id - ID del cazador.
- * @returns {Object} 200 - El cazador encontrado.
- * @returns {Object} 404 - Cazador no encontrado.
- * @returns {Object} 500 - Error en la solicitud.
+ * @route GET /hunters/:id
+ * @description Shows a hunter given its ID by dynamic parameter.
+ * @param {string} req.params.id - Hunter ID.
+ * @returns {Object} 200 - The hunter found.
+ * @returns {Object} 404 - Hunter not found.
+ * @returns {Object} 500 - Server error.
  */
-hunterRouter.get("/hunter/:id", async (req, res) => {
+hunterRouter.get("/hunters/:id", async (req, res) => {
   try {
     const hunter = await Hunter.findById(req.params.id);
     if (!hunter) {
       res.status(404).send({ error: "Hunter not found" });
+    } else {
+      res.status(200).send(hunter);
     }
-    res.status(200).send(hunter);
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).send({ error: error.message });
   }
 });
 
 /**
- * @route PATCH /hunter
- * @description Actualiza un cazador utilizando su ID proporcionado en la query string.
- * @access Public
- * @param {string} req.query.name - Nombre del cazador a actualizar.
- * @param {Object} req.body - Campos a actualizar.
- * @returns {Object} 200 - El cazador actualizado.
- * @returns {Object} 400 - Error en la solicitud.
- * @returns {Object} 404 - Cazador no encontrado.
+ * @route PATCH /hunters
+ * @description Updates a hunter using filters like name, type or location.
+ * @param {string} req.query.name - Hunter name.
+ * @param {Object} req.body - Fields to update.
+ * @returns {Object} 200 - The updated hunter.
+ * @returns {Object} 500 - Server error.
+ * @returns {Object} 404 - Hunter not found.
  */
-hunterRouter.patch("/hunter", async (req, res) => {
+hunterRouter.patch("/hunters", async (req, res) => {
   if (!req.query.name) {
     res.status(400).send({
       error: "A name must be provided in the query string",
@@ -114,23 +112,22 @@ hunterRouter.patch("/hunter", async (req, res) => {
           res.status(200).send(hunter);
         }
       } catch (error) {
-        res.status(500).send(error);
+        res.status(500).send({error: error.message});
       }
     }
   }
 });
 
 /**
- * @route PATCH /hunter/:id
- * @description Actualiza un cazador utilizando su ID proporcionado como parámetro dinámico.
- * @access Public
- * @param {string} req.params.id - ID del cazador a actualizar.
- * @param {Object} req.body - Campos a actualizar.
- * @returns {Object} 200 - El cazador actualizado.
- * @returns {Object} 400 - Error en la solicitud.
- * @returns {Object} 404 - Cazador no encontrado.
+ * @route PATCH /hunters/:id
+ * @description Updates a hunter using its ID given by dynamic parameter.
+ * @param {string} req.params.id - ID of the hunter to update.
+ * @param {Object} req.body - Fields to update.
+ * @returns {Object} 200 - The updated hunter.
+ * @returns {Object} 500 - Server error.
+ * @returns {Object} 404 - Hunter not found.
  */
-hunterRouter.patch("/hunter/:id", async (req, res) => {
+hunterRouter.patch("/hunters/:id", async (req, res) => {
   const allowedUpdates = ["name", "race", "location"];
   const updates = Object.keys(req.body);
   const isValidUpdate = updates.every((update) =>
@@ -150,23 +147,22 @@ hunterRouter.patch("/hunter/:id", async (req, res) => {
         res.status(200).send(hunter);
       }
     } catch (error) {
-      res.status(500).send(error);
+      res.status(500).send({error: error.message});
     }
   }
 });
 
 /**
- * @route DELETE /hunter
- * @description Elimina cazadores utilizando filtros como nombre, tipo o ubicación.
- * @access Public
- * @param {string} [req.query.name] - Nombre del cazador.
- * @param {string} [req.query.race] - Tipo del cazador.
- * @param {string} [req.query.location] - Ubicación del cazador.
- * @returns {Object} 200 - Información sobre los cazadores eliminados.
- * @returns {Object} 404 - No se encontraron cazadores para eliminar.
- * @returns {Object} 500 - Error del servidor.
+ * @route DELETE /hunters
+ * @description Deletes hunters using filters like name, type or location.
+ * @param {string} [req.query.name] - Hunter name.
+ * @param {string} [req.query.race] - Hunter race.
+ * @param {string} [req.query.location] - Hunter location.
+ * @returns {Object} 200 - The deleted hunters.
+ * @returns {Object} 404 - Hunters not found.
+ * @returns {Object} 500 - Server error.
  */
-hunterRouter.delete("/hunter", async (req, res) => {
+hunterRouter.delete("/hunters", async (req, res) => {
   const filter_name = req.query.name ? { name: req.query.name.toString() } : {};
   const filter_race = req.query.race ? { race: req.query.race.toString() } : {};
   const filter_location = req.query.location
@@ -180,7 +176,7 @@ hunterRouter.delete("/hunter", async (req, res) => {
   try {
     const hunters = await Hunter.find(filter);
     if (hunters.length === 0) {
-      res.status(404).send({ error: "No hunters found" });
+      res.status(404).send({ error: "Hunters not found" });
     } else {
       const result = await Hunter.deleteMany(filter);
       res.status(200).send({
@@ -189,28 +185,28 @@ hunterRouter.delete("/hunter", async (req, res) => {
       });
     }
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).send({error: error.message});
   }
 });
 
 /**
- * @route DELETE /hunter/:id
- * @description Elimina un cazador específico utilizando su ID.
- * @access Public
- * @param {string} req.params.id - ID del cazador a eliminar.
- * @returns {Object} 200 - El cazador eliminado.
- * @returns {Object} 404 - Cazador no encontrado.
- * @returns {Object} 400 - Error en la solicitud.
+ * @route DELETE /hunters/:id
+ * @description Delete a hunter using its ID given by dynamic parameter.
+ * @param {string} req.params.id - ID of the hunter to delete.
+ * @returns {Object} 200 - The deleted hunter.
+ * @returns {Object} 404 - Hunter not found.
+ * @returns {Object} 500 - Server error.
  */
-hunterRouter.delete("/hunter/:id", async (req, res) => {
+hunterRouter.delete("/hunters/:id", async (req, res) => {
   try {
     const hunter = await Hunter.findByIdAndDelete(req.params.id);
     if (!hunter) {
       res.status(404).send();
+    } else {
+      res.status(200).send(hunter);
     }
-    res.status(200).send(hunter);
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).send({error: error.message});
   }
 });
 

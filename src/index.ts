@@ -1,31 +1,15 @@
-import express from 'express';
-import './db/mongoose.js';
-import hunterRoutes from './routes/hunter.routes.js';
-import merchantRoutes from './routes/merchant.routes.js';
-import goodRoutes from './routes/good.routes.js';
-import defaultRoutes from './routes/default.routes.js';
-import transactionRoutes from './routes/transaction.routes.js';
-
-const app = express();
-
-app.use(express.json());
-app.use(hunterRoutes);
-app.use(merchantRoutes);
-app.use(goodRoutes);
-app.use(transactionRoutes);
-app.use(defaultRoutes);
-
-app.use((req, res) => {
-  res.status(404).json({ message: 'Ruta no encontrada' });
-});
+import { app } from './app.js';
 
 const port = process.env.PORT || 3000;
 
+/**
+ * Main entry point for the application.
+ * Starts the server and listens on the specified port.
+ * @param {number} port - The port number to listen on.
+ */
 app.listen(port, () => {
   console.log(`Server is up on port ${port}`);
 });
-
-export default app;
 
 
 

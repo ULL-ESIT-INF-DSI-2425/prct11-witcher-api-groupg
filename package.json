@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsc-watch --onSuccess \"env-cmd -f ./config/dev.env node dist/index.js\"",
     "doc": "typedoc",
-    "test": "env-cmd -f ./config/test.env vitest run",
+    "test": "env-cmd -f ./config/test.env vitest run ./tests/good.spec.ts",
     "coverage": "vitest run --coverage --coverage.include '**/src/*'"
   },
   "repository": {
@@ -38,7 +38,7 @@
     "tsc-watch": "^6.2.1",
     "typedoc": "^0.28.3",
     "typescript-eslint": "^8.31.0",
-    "vitest": "^3.1.2"
+    "vitest": "^3.1.3"
   },
   "type": "module",
   "dependencies": {

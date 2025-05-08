@@ -8,15 +8,14 @@ const transactionRouter = express.Router();
 
 /**
  * @route POST /transactions
- * @description Crea una nueva transacción.
- * @access Public
- * @param {Object} req.body - Datos de la transacción a crear.
- * @returns {Object} 201 - La transacción creada.
- * @returns {Object} 400 - Error en la solicitud.
+ * @description Creates a new transaction.
+ * @param {Object} req.body - Transaction object to be created.
+ * @returns {Object} 201 - The created transaction.
+ * @returns {Object} 404 - Goods not found or insufficient stock.
+ * @returns {Object} 500 - Server error.
  */
 transactionRouter.post("/transactions", async (req, res) => {
   const { goods, involvedName, involvedType, type } = req.body;
-
   try {
     const involved = await validateInvolved(involvedName, involvedType, type);
     const { newGoods, totalValue } = await validateAndProcessGoods(goods, type);
@@ -34,10 +33,18 @@ transactionRouter.post("/transactions", async (req, res) => {
       res.status(201).send(transaction);
     }
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).send({ error: error.message });
   }
 });
 
+/**
+ * This function validates if the involved (Hunter or Merchant) exists in the database.
+ * @param name - Hunter or Merchant name
+ * @param involvedType - Hunter or Merchant
+ * @param type - Buy or Sell
+ * @returns - Involved object
+ * @throws - Error if the involved does not exist and cannot be created
+ */
 async function validateInvolved(
   name: string,
   involvedType: "Hunter" | "Merchant",
@@ -50,8 +57,8 @@ async function validateInvolved(
       if (!involved) {
         const hunter = new Hunter({
           name,
-          race: "No especificado",
-          location: "No especificado",
+          race: "Uknown",
+          location: "Uknown",
         });
         await hunter.save();
         involved = hunter;
@@ -61,25 +68,32 @@ async function validateInvolved(
       if (!involved) {
         const merchant = new Merchant({
           name,
-          type: "No especificado",
-          location: "No especificado",
+          type: "Uknown",
+          location: "Uknown",
         });
         await merchant.save();
         involved = merchant;
       }
     } else {
       throw new Error(
-        "Un cazador no puede vender y un mercader no puede comprar",
+        "A hunter must be involved in a buy transaction and a merchant in a sell transaction.",
       );
     }
     return involved;
   } catch (error) {
-    throw new Error(`Error al validar el involucrado: ${error.message}`);
+    throw new Error(`Error validating involved: ${error.message}`);
   }
 }
 
-// Buy -> El cazador compra bienes
-// Sell -> El mercader vende bienes
+/**
+ * This function validates the goods and processes them according to the transaction type.
+ * @param goods - Array of goods to be processed
+ * @param goods.name - Name of the good
+ * @param goods.amount - Amount of the good
+ * @param type - Transaction type (Buy or Sell)
+ * @returns - Array of new goods and total value of the transaction
+ * @throws - Error if there is an issue processing the goods
+ */
 async function validateAndProcessGoods(
   goods: { name: string; amount: number }[],
   type: "Buy" | "Sell",
@@ -125,116 +139,109 @@ async function validateAndProcessGoods(
 }
 
 /**
- * @route GET /transactions
- * @description Obtiene transacciones filtradas por ID, nombre del involucrado, rango de fechas o tipo.
- * @access Public
- * @param {string} [req.query.id] - ID de la transacción.
- * @param {string} [req.query.involvedName] - Nombre del cazador o mercader.
- * @param {string} [req.query.startDate] - Fecha de inicio del rango.
- * @param {string} [req.query.endDate] - Fecha de fin del rango.
- * @param {string} [req.query.type] - Tipo de transacción ("Buy" o "Sell").
- * @returns {Object} 200 - Lista de transacciones encontradas.
- * @returns {Object} 400 - Error en la solicitud.
+ * @route GET /transactions/by-name
+ * @description Shows the transactions filtered by name.
+ * @param {string} [req.query.name] - Hunter or Merchant name to filter transactions.
+ * @returns {Object} 200 - The transactions found.
+ * @returns {Object} 500 - Server error.
+ * @returns {Object} 404 - No involved found.
  */
-transactionRouter.get("/transactions", async (req, res) => {
-  const { involvedName, startDate, endDate, type } = req.query;
+transactionRouter.get("/transactions/by-name", async (req, res) => {
+  const filter = req.query.name ? { name: req.query.name.toString() } : {};
   try {
-    const filter: any = {};
-    if (involvedName) {
-      filter.involvedName = involvedName;
+    const hunter = await Hunter.findOne(filter);
+    const merchant = await Merchant.findOne(filter);
+    if (!hunter && !merchant) {
+      res.status(404).send({ error: "Involved not found" });
+    } else {
+      const transactions = [];
+      if (hunter) {
+        const hunterTransactions = await Transaction.find({
+          involvedID: hunter._id,
+          involvedType: "Hunter",
+        });
+        transactions.push(...hunterTransactions);
+      }
+      if (merchant) {
+        const merchantTransactions = await Transaction.find({
+          involvedID: merchant._id,
+          involvedType: "Merchant",
+        });
+        transactions.push(...merchantTransactions);
+      }
+      res.status(200).send(transactions);
     }
-    if (startDate && endDate) {
-      filter.date = {
-        $gte: new Date(startDate as string),
-        $lte: new Date(endDate as string),
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
+/**
+ * @route GET /transactions/by-date
+ * @description Show the transactions filtered by a date range and type.
+ * @param {string} req.query.startDate - Start date of the range.
+ * @param {string} req.query.endDate - End date of the range.
+ * @param {string} req.query.type - Type of transaction (Buy, Sell, Both).
+ * @returns {Object} 200 - The transactions found.
+ * @returns {Object} 400 - Bad request.
+ * @returns {Object} 404 - No transactions found.
+ * @returns {Object} 500 - Server error.
+ */
+transactionRouter.get("/transactions/by-date", async (req, res) => {
+  try {
+    const { startDate, endDate, type } = req.query;
+    if (!startDate) {
+      res.status(400).send({ error: "startDate is required" });
+    } else if (!endDate) {
+      res.status(400).send({ error: "endDate is required" });
+    } else if (!type) {
+      res.status(400).send({ error: "type is required" });
+    }
+    if (type !== "Buy" && type !== "Sell" && type !== "Both") {
+      res.status(400).send({ error: "type must be 'Buy', 'Sell' or 'Both'" });
+    }
+    let filter = {};
+    if (type === "Buy" || type === "Sell") {
+      filter = {
+        date: {
+          $gte: new Date(startDate as string),
+          $lte: new Date(endDate as string),
+        },
+        type: type,
+      };
+    } else {
+      filter = {
+        date: {
+          $gte: new Date(startDate as string),
+          $lte: new Date(endDate as string),
+        },
       };
     }
-    if (type) {
-      filter.type = type;
+    const transactions = await Transaction.find(filter);
+    if (transactions.length === 0) {
+      res.status(404).send({ error: "No transactions found" });
+    } else {
+      res.status(200).send(transactions);
     }
-
-    const transactions =
-      await Transaction.find(filter).populate("goodDetails.goodId");
-    res.send(transactions);
   } catch (error) {
-    res.status(400).send({ error: error.message });
+    res.status(500).send({ error: error.message });
   }
 });
 
 /**
  * @route GET /transactions/:id
- * @description Obtiene una transacción específica por su ID.
- * @access Public
- * @param {string} req.params.id - ID de la transacción.
- * @returns {Object} 200 - La transacción encontrada.
- * @returns {Object} 404 - Transacción no encontrada.
- * @returns {Object} 400 - Error en la solicitud.
+ * @description Shows a transaction given its ID by dynamic parameter.
+ * @param {string} req.params.id - Transaction ID.
+ * @returns {Object} 200 - The transaction found.
+ * @returns {Object} 404 - Transaction not found.
+ * @returns {Object} 500 - Server error.
  */
 transactionRouter.get("/transactions/:id", async (req, res) => {
   try {
     const transaction = await Transaction.findById(req.params.id);
     if (!transaction) {
       res.status(404).send({ error: "Transaction not found" });
-    }
-    res.status(200).send(transaction);
-  } catch (error) {
-    res.status(500).send(error);
-  }
-});
-
-/**
- * @route PATCH /transactions/:id
- * @description Actualiza una transacción específica por su ID.
- * @access Public
- * @param {string} req.params.id - ID de la transacción.
- * @param {Object} req.body - Campos a actualizar.
- * @returns {Object} 200 - La transacción actualizada.
- * @returns {Object} 404 - Transacción no encontrada.
- * @returns {Object} 400 - Error en la solicitud.
- * {
- *  "goods": [
- * }
- */
-transactionRouter.patch("/transactions/:id", async (req, res) => {
-  try {
-    const { goods: updatedGoods } = req.body;
-    const transaction = await Transaction.findById(req.params.id);
-    if (!transaction) {
-      res.status(404).send({ error: "Transacción no encontrada." });
     } else {
-      let totalValue = 0;
-      for (const originalItem of transaction.goods) {
-        const goodName = originalItem.goodID.name;
-        const updatedItem = updatedGoods.find(
-          (item) => item.name === goodName
-        );
-        if (!updatedItem) {
-          res.status(400).send({
-            error: `No se pueden eliminar ni añadir bienes. Bien omitido: ${goodName}`,
-          });
-        }
-        const good = await Good.findOne({ name: goodName });
-        if (!good) continue;
-        const oldAmount = originalItem.amount;
-        const newAmount = updatedItem.amount;
-        const diff = newAmount - oldAmount;
-        if (transaction.type === "Buy" && good.stock < diff) {
-          res.status(400).send({
-            error: `Stock insuficiente para "${good.name}". Stock actual: ${good.stock}`,
-          });
-        }
-        if (transaction.type === "Buy") {
-          good.stock -= diff;
-        } else {
-          good.stock += diff;
-        }
-        await good.save();
-        originalItem.amount = newAmount;
-        totalValue += good.value * newAmount;
-      }
-      transaction.transactionValue = totalValue;
-      transaction.date = new Date();
-      await transaction.save();
       res.status(200).send(transaction);
     }
   } catch (error) {
@@ -243,43 +250,116 @@ transactionRouter.patch("/transactions/:id", async (req, res) => {
 });
 
 /**
+ * @route PATCH /transactions/:id
+ * @description Updates a transaction given its ID by dynamic parameter.
+ * @param {string} req.params.id - Transaction ID.
+ * @param {Object} req.body - Transaction object to be updated.
+ * @param {string} req.body.goods - Array of goods to be updated.
+ * @param {string} req.body.goods.name - Name of the good.
+ * @param {number} req.body.goods.amount - Amount of the good.
+ * @returns {Object} 200 - The updated transaction.
+ * @returns {Object} 400 - No goods found or insufficient stock.
+ * @returns {Object} 404 - Transaction not found.
+ * @returns {Object} 500 - Server error.
+ */
+transactionRouter.patch("/transactions/:id", async (req, res) => {
+  try {
+    const { goods: updatedGoods } = req.body;
+    const transaction = await Transaction.findById(req.params.id);
+    if (!transaction) {
+      res.status(404).send({ error: "Transaction not found" });
+    } else {
+      let totalValue = 0;
+      let updated = false;
+      for (const originalItem of transaction.goods) {
+        const good = await Good.findById(originalItem.goodID._id);
+        if (!good) continue;
+        const updatedItem = updatedGoods.find(
+          (item) => item.name === good.name,
+        );
+        if (!updatedItem) continue;
+        const oldAmount = originalItem.amount;
+        const newAmount = updatedItem.amount;
+        const diff = newAmount - oldAmount;
+        let newStock = 0;
+        if (transaction.type === "Buy") {
+          if (good.stock < diff) {
+            continue;
+          } else {
+            newStock = good.stock - diff;
+          }
+        } else {
+          newStock = good.stock + diff;
+        }
+        await Good.updateOne({ name: good.name }, { stock: newStock });
+        originalItem.amount = newAmount;
+        totalValue += good.value * newAmount;
+        transaction.transactionValue = totalValue;
+        transaction.date = new Date();
+        await transaction.save();
+        updated = true;
+      }
+      if (!updated) {
+        res.status(400).send({
+          error:
+            "Goods not found or insufficient stock to update the transaction.",
+        });
+      } else {
+        res.status(200).send(transaction);
+      }
+    }
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
+/**
  * @route DELETE /transactions/:id
- * @description Elimina una transacción específica por su ID.
- * @access Public
- * @param {string} req.params.id - ID de la transacción.
- * @returns {Object} 200 - La transacción eliminada.
- * @returns {Object} 404 - Transacción no encontrada.
- * @returns {Object} 400 - Error en la solicitud.
+ * @description Delete a transaction given its ID by dynamic parameter.
+ * @param {string} req.params.id - Transaction ID.
+ * @returns {Object} 200 - The deleted transaction.
+ * @returns {Object} 404 - Transaction not found.
+ * @returns {Object} 500 - Server error.
  */
 transactionRouter.delete("/transactions/:id", async (req, res) => {
-  const { id } = req.params;
-
   try {
-    const transaction = await Transaction.findById(id);
+    const transaction = await Transaction.findById(req.params.id);
     if (!transaction) {
-      res.status(404).send({ error: "Transacción no encontrada" });
-    }
-
-    // Revertir stock de bienes
-    for (const detail of transaction.goods) {
-      const good = await Good.findById(detail.goodID);
-      if (!good) {
-        throw new Error(`Good not found: ${detail.goodID}`);
+      res.status(404).send({ error: "Transaction not found" });
+    } else {
+      let returned: boolean = true;
+      const goodAndNewStock: { good: string; newStock: number }[] = [];
+      for (const item of transaction.goods) {
+        const good = await Good.findById(item.goodID);
+        if (!good) continue;
+        let newStock = 0;
+        if (transaction.type === "Buy") {
+          newStock = good.stock + item.amount;
+        } else if (transaction.type === "Sell") {
+          if (good.stock < item.amount) {
+            returned = false;
+            break;
+          } else {
+            newStock = good.stock - item.amount;
+          }
+        }
+        goodAndNewStock.push({ good: good.name, newStock });
       }
-      // Revertir el stock según el tipo de transacción
-      /*
-      if (transaction.type === "Sell") {
-        good.stock += detail.amount;
+      if (returned) {
+        await Transaction.deleteOne({ _id: transaction._id });
+        for (const { good, newStock } of goodAndNewStock) {
+          await Good.updateOne({ name: good }, { stock: newStock });
+        }
+        res.status(200).send(transaction);
       } else {
-        good.stock -= detail.amount;
+        res.status(400).send({
+          error:
+            "Cannot delete transaction. Goods not found or insufficient stock.",
+        });
       }
-      await good.save();*/
     }
-
-    await Transaction.deleteOne({ _id: transaction._id });
-    res.send(transaction);
   } catch (error) {
-    res.status(400).send({ error: error.message });
+    res.status(500).send({ error: error.message });
   }
 });
 
