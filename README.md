@@ -515,14 +515,111 @@ De los bienes especificados se meterán en la transaccion los que existan o los 
     "type": "Buy"
 }
 ```
+---
+
 ### **GET** `/transactions`
+Obtiene todas las transacciones con filtros opcionales.
 
-### **GET** `/transactions/:id`
+####🔸 Parámetros (opcionales):
+- `type`: Tipo de transacción (Buy/Sell).
 
-### **PATCH** `/transactions`
+🔸 Responses:
+- `200 OK`: Retorna lista de transacciones.
 
-### **PATCH** `/transactions/:id`
+- `500`: Retorna error.
 
-### **DELETE** `/transactions`
+---
 
-### **DELETE** `/transactions/:id`
+### **GET** `/transactions/by-name`
+Obtiene transacciones filtradas por nombre del involucrado (Hunter/Merchant).
+
+🔸 Parámetros (opcionales):
+- `name`: Nombre del Hunter/Merchant.
+
+🔸 Responses:
+- `200 OK`: Retorna lista de transacciones.
+
+- `404 Not Found`: No se encontró el involucrado.
+
+- `500`: Retorna error.
+
+---
+
+### GET /transactions/by-date
+Obtiene transacciones filtradas por rango de fechas y tipo.
+
+🔸 Parámetros (requeridos):
+- `startDate`: Fecha de inicio (YYYY-MM-DD).
+
+- `endDate`: Fecha de fin (YYYY-MM-DD).
+
+- `type`: Tipo de transacción (Buy/Sell/Both).
+
+🔸 Responses:
+- `200 OK`: Retorna lista de transacciones.
+
+- `400 Bad Request`: Faltan parámetros o son inválidos.
+
+- `404 Not Found`: No hay transacciones en el rango.
+
+- `500`: Retorna error.
+
+---
+
+### GET /transactions/:id
+Obtiene una transacción por su ID.
+
+🔸 Parámetros:
+- `id`: ID de la transacción.
+
+🔸 Responses:
+- `200 OK`: Retorna la transacción solicitada.
+
+- `404 Not Found`: Transacción no encontrada.
+
+- `500`: Retorna error.
+
+---
+
+### PATCH /transactions/:id
+Actualiza una transacción por su ID (modifica cantidades de bienes).
+
+🔸 Parámetros:
+- `id`: ID de la transacción.
+
+🔸 Body:
+```json
+{
+  "goods": [
+    {
+      "name": "Espada",
+      "amount": 15
+    }
+}
+```
+
+🔸 Responses:
+- `200 OK`: Retorna la transacción actualizada.
+
+- `400 Bad Request`: No hay stock suficiente o bienes no válidos.
+
+- `404 Not Found`: Transacción no encontrada.
+
+- `500`: Retorna error.
+
+---
+
+### DELETE /transactions/:id
+Elimina una transacción por su ID (revierte cambios en stock).
+
+🔸 Parámetros:
+- `id`: ID de la transacción.
+
+🔸 Responses:
+- `200 OK`: Retorna la transacción eliminada.
+
+- `400 Bad Request`: No se puede revertir el stock.
+
+- `404 Not Found`: Transacción no encontrada.
+
+- `500`: Retorna error.
