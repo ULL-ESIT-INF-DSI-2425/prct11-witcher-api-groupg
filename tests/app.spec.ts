@@ -459,6 +459,29 @@ describe("Good API", () => {
       expect(response.body[0]).toMatchObject(sampleGood);
     });
 
+    test("Should all goods with steel material", async () => {
+      await new Good(sampleGood2).save();
+      const response = await request(app).get("/goods?material=Steel").expect(200);
+      expect(response.body).toHaveLength(2);
+      expect(response.body[0]).toMatchObject(sampleGood);
+      expect(response.body[1]).toMatchObject(sampleGood2);
+    });
+
+    test("Should return Silver Sword searching by description and material", async () => {
+      await new Good(sampleGood2).save();
+      const response = await request(app)
+        .get("/goods?description=A sword made of silver effective against monsters&material=Steel")
+        .expect(200);
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0]).toMatchObject(sampleGood);
+    });
+
+    test("Should return all goods if no query parameters are provided", async () => {
+      await new Good(sampleGood2).save();
+      const response = await request(app).get("/goods").expect(200);
+      expect(response.body).toHaveLength(2);
+    });
+
     test("Should return 404 if no goods match the query", async () => {
       await request(app).get("/goods?name=Unknown").expect(404);
     });
@@ -474,6 +497,19 @@ describe("Good API", () => {
 
     test("Should return 404 if good ID does not exist", async () => {
       await request(app).get("/goods/645c1b2f4f1a2567e8d9f000").expect(404);
+    });
+  });
+
+  describe("PATCH /goods/", () => {
+    test("Should update a good passing the name by query", async () => {
+      const good = await Good.findOne({ name: "Silver Sword" });
+      const response = await request(app)
+        .patch("/goods?name=Silver Sword")
+        .send({ stock: 5 })
+        .expect(200);
+      expect(response.body.stock).toBe(5);
+      const updatedGood = await Good.findById(good!._id);
+      expect(updatedGood!.stock).toBe(5);
     });
   });
 

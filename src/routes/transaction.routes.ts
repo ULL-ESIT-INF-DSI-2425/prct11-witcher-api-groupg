@@ -30,7 +30,10 @@ transactionRouter.post("/transactions", async (req, res) => {
         transactionValue: totalValue,
       });
       await transaction.save();
-      res.status(201).send(transaction);
+      const populatedTransaction = await Transaction.findById(transaction._id)
+        .populate("goods.goodID")
+        .populate("involvedID");
+      res.status(201).send(populatedTransaction);
     }
   } catch (error) {
     res.status(500).send({ error: error.message });
@@ -148,7 +151,9 @@ async function validateAndProcessGoods(
 transactionRouter.get("/transactions", async (req, res) => {
   const filter = req.query.type ? { type: req.query.type.toString() } : {};
   try {
-    const transactions = await Transaction.find(filter);
+    const transactions = await Transaction.find(filter)
+      .populate("goods.goodID")
+      .populate("involvedID");
     if (transactions.length === 0) {
       res.status(404).send({ error: "No transactions found" });
     } else {
@@ -180,14 +185,18 @@ transactionRouter.get("/transactions/by-name", async (req, res) => {
         const hunterTransactions = await Transaction.find({
           involvedID: hunter._id,
           involvedType: "Hunter",
-        });
+        })
+          .populate("goods.goodID")
+          .populate("involvedID");
         transactions.push(...hunterTransactions);
       }
       if (merchant) {
         const merchantTransactions = await Transaction.find({
           involvedID: merchant._id,
           involvedType: "Merchant",
-        });
+        })
+          .populate("goods.goodID")
+          .populate("involvedID");
         transactions.push(...merchantTransactions);
       }
       res.status(200).send(transactions);
@@ -238,7 +247,9 @@ transactionRouter.get("/transactions/by-date", async (req, res) => {
         },
       };
     }
-    const transactions = await Transaction.find(filter);
+    const transactions = await Transaction.find(filter)
+      .populate("goods.goodID")
+      .populate("involvedID");
     if (transactions.length === 0) {
       res.status(404).send({ error: "No transactions found" });
     } else {
@@ -259,7 +270,9 @@ transactionRouter.get("/transactions/by-date", async (req, res) => {
  */
 transactionRouter.get("/transactions/:id", async (req, res) => {
   try {
-    const transaction = await Transaction.findById(req.params.id);
+    const transaction = await Transaction.findById(req.params.id)
+      .populate("goods.goodID")
+      .populate("involvedID");
     if (!transaction) {
       res.status(404).send({ error: "Transaction not found" });
     } else {
@@ -298,13 +311,17 @@ transactionRouter.patch("/transactions/:id", async (req, res) => {
         const updatedItem = updatedGoods.find(
           (item) => item.name === good.name,
         );
-        if (!updatedItem) continue;
+        if (!updatedItem) {
+          totalValue += good.value * originalItem.amount;
+          continue;
+        }
         const oldAmount = originalItem.amount;
         const newAmount = updatedItem.amount;
         const diff = newAmount - oldAmount;
         let newStock = 0;
         if (transaction.type === "Buy") {
           if (good.stock < diff) {
+            totalValue += good.value * oldAmount;
             continue;
           } else {
             newStock = good.stock - diff;
@@ -317,7 +334,6 @@ transactionRouter.patch("/transactions/:id", async (req, res) => {
         totalValue += good.value * newAmount;
         transaction.transactionValue = totalValue;
         transaction.date = new Date();
-        await transaction.save();
         updated = true;
       }
       if (!updated) {
@@ -326,7 +342,11 @@ transactionRouter.patch("/transactions/:id", async (req, res) => {
             "Goods not found or insufficient stock to update the transaction.",
         });
       } else {
-        res.status(200).send(transaction);
+        await transaction.save();
+        const populatedTransaction = await Transaction.findById(transaction._id)
+          .populate("goods.goodID")
+          .populate("involvedID");
+        res.status(200).send(populatedTransaction);
       }
     }
   } catch (error) {
@@ -344,7 +364,9 @@ transactionRouter.patch("/transactions/:id", async (req, res) => {
  */
 transactionRouter.delete("/transactions/:id", async (req, res) => {
   try {
-    const transaction = await Transaction.findById(req.params.id);
+    const transaction = await Transaction.findById(req.params.id)
+      .populate("goods.goodID")
+      .populate("involvedID");
     if (!transaction) {
       res.status(404).send({ error: "Transaction not found" });
     } else {
