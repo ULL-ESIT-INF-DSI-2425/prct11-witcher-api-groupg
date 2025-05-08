@@ -1,30 +1,5 @@
 [![Tests](https://github.com/ULL-ESIT-INF-DSI-2425/prct11-witcher-api-groupg/actions/workflows/ci.yml/badge.svg)](https://github.com/ULL-ESIT-INF-DSI-2425/prct11-witcher-api-groupg/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/ULL-ESIT-INF-DSI-2425/prct11-witcher-api-groupg/badge.svg?branch=main)](https://coveralls.io/github/ULL-ESIT-INF-DSI-2425/prct11-witcher-api-groupg?branch=main)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ULL-ESIT-INF-DSI-2425_prct11-witcher-api-groupg&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ULL-ESIT-INF-DSI-2425_prct11-witcher-api-groupg)
-
-
-Transactions:
-POST
-localhost:3000/transactions
-Body:
-{
-  "goods": [
-    {
-      "name": "Espada"
-      "amount": 10
-    },
-    {
-      "name": "Escudo"
-      "amount": 5
-    }
-  ],
-  "involvedName": "Pepe",
-  "involvedType": "Hunter",
-  "type": "Buy"
-}
-GET
-localhost:3000/transactions/id
-localhost:3000/transactions/?name=xxx&type=xxx
 
 # ⚔️ API REST La Posada del Lobo Blanco ⚔️ 
 
@@ -122,9 +97,9 @@ Crea un nuevo bien.
 #### 🔸 Body:
 ```json
 {
-  "name": "Espada",
-  "description": "Espada larga",
-  "material": "Plata",
+  "name": "Sword",
+  "description": "Long sword",
+  "material": "Silver",
   "weight": 5,
   "stock": 2,
   "value": 500
@@ -245,15 +220,15 @@ Elimina un bien por su ID.
 
 ## 🧝 Hunters API
 
-### **POST** `/hunter`
+### **POST** `/hunters`
 Crea un nuevo cazador.
 
 #### 🔸 Body:
 ```json
 {
-  "name": "Yennefer de Vengerberg",
-  "type": "Hechicero",
-  "location": "Novigrado",
+  "name": "Yennefer of Vengerberg",
+  "type": "Sorcerer",
+  "location": "Novigrad",
 }
 ```
 
@@ -263,7 +238,7 @@ Crea un nuevo cazador.
 
 ---
 
-### **GET** `/hunter?name=xxx&type=xxx&location=xxx`
+### **GET** `/hunters?name=xxx&type=xxx&location=xxx`
 
 Obtiene cazadores filtrados por parámetros opcionales.
 
@@ -279,7 +254,7 @@ Obtiene cazadores filtrados por parámetros opcionales.
 
 ---
 
-### **GET** `/hunter/:id`
+### **GET** `/hunters/:id`
 
 Obtiene un cazador por su ID.
 
@@ -293,7 +268,7 @@ Obtiene un cazador por su ID.
 
 ---
 
-### **PATCH** `/hunter?name=xxx`
+### **PATCH** `/hunters?name=xxx`
 
 Actualiza un cazador por su nombre.
 
@@ -315,7 +290,7 @@ Actualiza un cazador por su nombre.
 
 ---
 
-### **PATCH** `/hunter/:id`
+### **PATCH** `/hunters/:id`
 
 Actualiza un cazador por su ID.
 
@@ -338,7 +313,7 @@ Actualiza un cazador por su ID.
 
 ---
 
-### **DELETE** `/hunter?name=xxx&type=xxx&location=xxx`
+### **DELETE** `/hunters?name=xxx&type=xxx&location=xxx`
 
 Elimina cazadores por filtros opcionales.
 
@@ -354,7 +329,7 @@ Elimina cazadores por filtros opcionales.
 
 ---
 
-### **DELETE** `/hunter/:id`
+### **DELETE** `/hunters/:id`
 
 Elimina un cazador por su ID.
 
@@ -370,14 +345,14 @@ Elimina un cazador por su ID.
 
 ## 🧙 Merchants API
 
-### **POST** `/merchant`
+### **POST** `/merchants`
 Crea un nuevo mercader.
 
 #### 🔸 Body:
 ```json
 {
   "name": "Hattori",
-  "type": "Herrero",
+  "type": "Blacksmith",
   "location": "Novigrad"
 }
 ```
@@ -388,7 +363,7 @@ Crea un nuevo mercader.
 
 ---
 
-### **GET** `/merchant?name=xxx&type=xxx&location=xxx`
+### **GET** `/merchants?name=xxx&type=xxx&location=xxx`
 
 Obtiene mercaderes filtrados por parámetros opcionales.
 
@@ -404,7 +379,7 @@ Obtiene mercaderes filtrados por parámetros opcionales.
 
 ---
 
-### **GET** `/merchant/:id`
+### **GET** `/merchants/:id`
 
 Obtiene un mercader por su ID.
 
@@ -418,7 +393,7 @@ Obtiene un mercader por su ID.
 
 ---
 
-### **PATCH** `/merchant?name=xxx`
+### **PATCH** `/merchants?name=xxx`
 
 Actualiza un mercader por su nombre.
 
@@ -440,7 +415,7 @@ Actualiza un mercader por su nombre.
 
 ---
 
-### **PATCH** `/merchant/:id`
+### **PATCH** `/merchants/:id`
 
 Actualiza un mercader por su ID.
 
@@ -463,7 +438,7 @@ Actualiza un mercader por su ID.
 
 ---
 
-### **DELETE** `/merchant?name=xxx&type=xxx&location=xxx`
+### **DELETE** `/merchants?name=xxx&type=xxx&location=xxx`
 
 Elimina mercaderes por filtros opcionales.
 
@@ -479,7 +454,7 @@ Elimina mercaderes por filtros opcionales.
 
 ---
 
-### **DELETE** `/merchant/:id`
+### **DELETE** `/merchants/:id`
 
 Elimina un mercader por su ID.
 
@@ -502,11 +477,11 @@ De los bienes especificados se meterán en la transaccion los que existan o los 
 {
     "goods": [
         {
-            "name": "Espada",
+            "name": "Sword",
             "amount": 20
         },
         {
-            "name": "Escudo",
+            "name": "Shield",
             "amount": 1
         }
     ],
@@ -531,10 +506,10 @@ Obtiene todas las transacciones con filtros opcionales.
 ---
 
 ### **GET** `/transactions/by-name`
-Obtiene transacciones filtradas por nombre del involucrado (Hunter/Merchant).
+Obtiene transacciones filtradas por nombre del involucrado (Hunter/Merchants).
 
 🔸 Parámetros (opcionales):
-- `name`: Nombre del Hunter/Merchant.
+- `name`: Nombre del Hunter/Merchants.
 
 🔸 Responses:
 - `200 OK`: Retorna lista de transacciones.
@@ -592,9 +567,10 @@ Actualiza una transacción por su ID (modifica cantidades de bienes).
 {
   "goods": [
     {
-      "name": "Espada",
+      "name": "Sword",
       "amount": 15
     }
+  ]
 }
 ```
 
