@@ -146,11 +146,14 @@ async function validateAndProcessGoods(
  * @returns {Object} 500 - Server error
  */
 transactionRouter.get("/transactions", async (req, res) => {
+  const filter = req.query.type ? { type: req.query.type.toString() } : {};
   try {
-    const { type } = req.query;
-    const filter = type ? { type } : {};
     const transactions = await Transaction.find(filter);
-    res.status(200).send(transactions);
+    if (transactions.length === 0) {
+      res.status(404).send({ error: "No transactions found" });
+    } else {
+      res.status(200).send(transactions);
+    }
   } catch (error) {
     res.status(500).send({ error: error.message });
   }

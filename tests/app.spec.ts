@@ -12,10 +12,22 @@ const sampleHunter = {
   location: "Kaer Morhen",
 };
 
+const sampleHunter2 = {
+  name: "Yennefer",
+  race: "Human",
+  location: "Vengerberg",
+};
+
 const sampleMerchant = {
   name: "Hattori",
   type: "Blacksmith",
   location: "Novigrad",
+};
+
+const sampleMerchant2 = {
+  name: "Zoltan",
+  type: "General",
+  location: "Vergen",
 };
 
 const sampleGood = {
@@ -26,6 +38,16 @@ const sampleGood = {
   stock: 10,
   value: 500,
 };
+
+const sampleGood2 = {
+  name: "Steel Shield",
+  description: "A shield made of steel",
+  material: "Steel",
+  weight: 5,
+  stock: 20,
+  value: 300,
+};
+
 
 beforeEach(async () => {
   await Transaction.deleteMany();
@@ -41,7 +63,7 @@ beforeEach(async () => {
     involvedID: hunter._id,
     involvedType: "Hunter",
     goodDetails: [{ goodId: good._id, amount: 2 }],
-    type: "Sell",
+    type: "Buy",
     transactionValue: 1500,
   }).save();
 
@@ -49,7 +71,7 @@ beforeEach(async () => {
     involvedID: merchant._id,
     involvedType: "Merchant",
     goodDetails: [{ goodId: good._id, amount: 5 }],
-    type: "Buy",
+    type: "Sell",
     transactionValue: 2500,
   }).save();
 });
@@ -277,7 +299,7 @@ describe("Transaction API", () => {
   describe("GET /transactions/:id", () => {
     test("Should get a transaction by ID", async () => {
       const transaction = await Transaction.findOne();
-      const response = await request(app)
+      await request(app)
         .get(`/transactions/${transaction!._id}`)
         .expect(200);
     });
