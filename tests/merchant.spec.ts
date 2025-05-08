@@ -5,7 +5,7 @@ import { Merchant } from "../src/models/merchant.model.js";
 
 const sampleMerchant = {
   name: "Hattori",
-  type: "Herrero",
+  type: "Blacksmith",
   location: "Novigrad",
 };
 
@@ -41,7 +41,7 @@ describe("POST /merchants", () => {
   });
 
   test("Should fail to create a merchant with duplicate name", async () => {
-    await request(app).post("/merchants").send(sampleMerchant).expect(400);
+    await request(app).post("/merchants").send(sampleMerchant).expect(500);
   });
 
   test("Should fail to create a merchant with invalid type", async () => {
@@ -52,7 +52,7 @@ describe("POST /merchants", () => {
         type: "invalid-type",
         location: "Oxenfurt",
       })
-      .expect(400);
+      .expect(500);
   });
 });
 

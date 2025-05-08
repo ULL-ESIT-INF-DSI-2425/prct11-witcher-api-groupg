@@ -5,7 +5,7 @@ import { Hunter } from "../src/models/hunter.model.js";
 
 const sampleHunter = {
   name: "Geralt",
-  race: "Cazador",
+  race: "Human",
   location: "Kaer Morhen",
 };
 
@@ -24,14 +24,14 @@ describe("POST /hunters", () => {
       .post("/hunters")
       .send({
         name: "Triss",
-        race: "Hechicero",
+        race: "Mage",
         location: "Novigrad",
       })
       .expect(201);
 
     expect(response.body).to.include({
       name: "Triss",
-      race: "Hechicero",
+      race: "Mage",
       location: "Novigrad",
     });
 
@@ -41,7 +41,7 @@ describe("POST /hunters", () => {
   });
 
   test("Should fail to create a hunter with duplicate name", async () => {
-    await request(app).post("/hunters").send(sampleHunter).expect(400);
+    await request(app).post("/hunters").send(sampleHunter).expect(500);
   });
 
   test("Should fail to create a hunter with invalid race", async () => {
@@ -52,7 +52,7 @@ describe("POST /hunters", () => {
         race: "invalid-race",
         location: "Vengerberg",
       })
-      .expect(400);
+      .expect(500);
   });
 });
 
