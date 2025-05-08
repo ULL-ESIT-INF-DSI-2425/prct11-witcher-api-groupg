@@ -110,7 +110,7 @@ Para compilar y ejecutar el sistema ejecuta el siguiente comando:
 
 ```sh
 tsc
-npm run start
+npm run dev
 ```
 
 ## 📦 Goods API
