@@ -20,27 +20,59 @@ Un bien consta de los siguientes atributos:
 - Un **ID** único que permita identificarlo.
 - Su **nombre**.
 - Una **descripción** que refleje la historia y utilidad del bien.
-- El **material** de que está hecho.
+- El **material** de que está hecho:
+  - Steel
+  - Wood
+  - Stone
+  - Iron
+  - Leather
+  - Cloth
+  - Glass
+  - Bronze
+  - Silver
+  - Gold
+  - Unknown
 - Su **peso**.
 - Su **valor** en coronas.
 
 ### 🧒 Cliente
 Un cliente tiene los siguientes atributos:
 - Su **nombre**.
-- Su **raza**(humano, elfo, enano...).
+- Su **raza**:
+  - Human
+  - Elf
+  - Dwarf
+  - Orc
+  - Sorcerer
+  - Mage
+  - Warrior
+  - Hunter
+  - Barbarian
+  - Cleric
+  - Assassin
+  - Unknown
 - La **ubicación** en la que se encuentra.
 
 ### 🧒 Mercader
 Un mercader tiene los siguientes atributos:
 - Su **nombre**.
-- Su **tipo**(herrero, alquimista, general...).
+- Su **tipo**:
+  - General
+  - Alchemist
+  - Blacksmith
+  - Gunsmith
+  - Craftman
+  - Tailor
+  - Jeweler
+  - Mage
+  - Unknown
 - La **ubicación** en la que se encuentra.
 
 ### 💰 Transacción
 Una transacción deberá contemplar los siguientes atributos:
 - El **tipo** de transacción. Podemos diferenciar 2 tipos:
-  - Venta realizada a un mercader.
-  - Compra realizada a un cliente.
+  - Venta realizada de un mercader.
+  - Compra realizada de un cliente.
 - La **fecha** en la que se realiza la transacción.
 - La lista de **bienes** intercambiados.
 - La cantidad de **coronas** involucradas en la transacción.
@@ -152,6 +184,7 @@ Actualiza un bien por su nombre.
 #### 🔸 Body:
 ```json
 {
+  "name": "Sword",
   "stock": 2,
   "value": 500
 }
@@ -175,6 +208,7 @@ Actualiza un bien por su ID.
 #### 🔸 Body:
 ```json
 {
+  "name": "Sword",
   "stock": 2,
   "value": 500
 }
@@ -227,7 +261,7 @@ Crea un nuevo cazador.
 ```json
 {
   "name": "Yennefer of Vengerberg",
-  "type": "Sorcerer",
+  "race": "Sorcerer",
   "location": "Novigrad",
 }
 ```
@@ -238,13 +272,13 @@ Crea un nuevo cazador.
 
 ---
 
-### **GET** `/hunters?name=xxx&type=xxx&location=xxx`
+### **GET** `/hunters?name=xxx&race=xxx&location=xxx`
 
 Obtiene cazadores filtrados por parámetros opcionales.
 
 #### 🔸 Parámetros (opcionales):
 - `name`: nombre del cazador.
-- `type`: tipo del cazador.
+- `race`: raza del cazador.
 - `location`: ubicación del cazador.
 
 #### 🔸 Responses:
@@ -278,7 +312,9 @@ Actualiza un cazador por su nombre.
 #### 🔸 Body:
 ```json
 {
-  "location": "Kaer Morhen"
+  "name": "Yennefer of Vengerberg",
+  "race": "Sorcerer",
+  "location": "Novigrad",
 }
 ```
 
@@ -300,8 +336,9 @@ Actualiza un cazador por su ID.
 #### 🔸 Body:
 ```json
 {
-  "stock": 2,
-  "value": 500
+  "name": "Yennefer of Vengerberg",
+  "race": "Sorcerer",
+  "location": "Novigrad",
 }
 ```
 
@@ -313,13 +350,13 @@ Actualiza un cazador por su ID.
 
 ---
 
-### **DELETE** `/hunters?name=xxx&type=xxx&location=xxx`
+### **DELETE** `/hunters?name=xxx&race=xxx&location=xxx`
 
 Elimina cazadores por filtros opcionales.
 
 #### 🔸 Parámetros (opcionales):
 - `name`
-- `type`
+- `race`
 - `location`
 
 #### 🔸 Responses:
@@ -403,7 +440,9 @@ Actualiza un mercader por su nombre.
 #### 🔸 Body:
 ```json
 {
-  "location": "Vizima"
+  "name": "Hattori",
+  "type": "Blacksmith",
+  "location": "Novigrad"
 }
 ```
 
@@ -425,8 +464,9 @@ Actualiza un mercader por su ID.
 #### 🔸 Body:
 ```json
 {
-  "stock": 2,
-  "value": 500
+  "name": "Hattori",
+  "type": "Blacksmith",
+  "location": "Novigrad"
 }
 ```
 
@@ -509,7 +549,7 @@ Obtiene todas las transacciones con filtros opcionales.
 Obtiene transacciones filtradas por nombre del involucrado (Hunter/Merchants).
 
 🔸 Parámetros (opcionales):
-- `name`: Nombre del Hunter/Merchants.
+- `name`: Nombre del Hunter/Merchant.
 
 🔸 Responses:
 - `200 OK`: Retorna lista de transacciones.
@@ -557,7 +597,7 @@ Obtiene una transacción por su ID.
 ---
 
 ### PATCH /transactions/:id
-Actualiza una transacción por su ID (modifica cantidades de bienes).
+Actualiza una transacción por su ID (modifica cantidades de bienes). Solo modifica la cantidad de bienes involucrados en la transacción si es posible.
 
 🔸 Parámetros:
 - `id`: ID de la transacción.
@@ -566,11 +606,15 @@ Actualiza una transacción por su ID (modifica cantidades de bienes).
 ```json
 {
   "goods": [
-    {
-      "name": "Sword",
-      "amount": 15
-    }
-  ]
+        {
+            "name": "Sword",
+            "amount": 20
+        },
+        {
+            "name": "Shield",
+            "amount": 1
+        }
+    ],
 }
 ```
 

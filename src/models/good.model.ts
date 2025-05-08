@@ -18,7 +18,7 @@ export interface GoodInterface extends Document {
   material:
     | "Steel"
     | "Wood"
-    | "StoneStone"
+    | "Stone"
     | "Iron"
     | "Leather"
     | "Cloth"
@@ -93,7 +93,7 @@ const GoodSchema = new Schema<GoodInterface>({
     enum: [
       "Steel",
       "Wood",
-      "StoneStone",
+      "Stone",
       "Iron",
       "Leather",
       "Cloth",
