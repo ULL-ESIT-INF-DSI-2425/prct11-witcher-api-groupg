@@ -173,6 +173,9 @@ transactionRouter.get("/transactions", async (req, res) => {
  * @returns {Object} 404 - No involved found.
  */
 transactionRouter.get("/transactions/by-name", async (req, res) => {
+  if (!req.query.name) {
+    res.status(400).send({ error: "name is required" });
+  }
   const filter = req.query.name ? { name: req.query.name.toString() } : {};
   try {
     const hunter = await Hunter.findOne(filter);

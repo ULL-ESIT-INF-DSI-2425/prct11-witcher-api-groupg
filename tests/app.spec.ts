@@ -511,6 +511,8 @@ describe("Good API", () => {
       const updatedGood = await Good.findById(good!._id);
       expect(updatedGood!.stock).toBe(5);
     });
+
+    
   });
 
   describe("PATCH /goods/:id", () => {
