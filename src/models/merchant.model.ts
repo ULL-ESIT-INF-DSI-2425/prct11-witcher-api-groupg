@@ -20,7 +20,7 @@ export interface MerchantInterface extends Document {
     | "Tailor"
     | "Jeweler"
     | "Mage"
-    | "Uknown";
+    | "Unknown";
   location: string;
 }
 
@@ -71,7 +71,7 @@ const MerchantSchema = new Schema<MerchantInterface>({
       "Tailor",
       "Jeweler",
       "Mage",
-      "Uknown",
+      "Unknown",
     ],
   },
   location: {

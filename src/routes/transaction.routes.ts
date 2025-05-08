@@ -48,7 +48,7 @@ transactionRouter.post("/transactions", async (req, res) => {
  * @returns - Involved object
  * @throws - Error if the involved does not exist and cannot be created
  */
-async function validateInvolved(
+export async function validateInvolved(
   name: string,
   involvedType: "Hunter" | "Merchant",
   type: "Buy" | "Sell",
@@ -60,8 +60,8 @@ async function validateInvolved(
       if (!involved) {
         const hunter = new Hunter({
           name,
-          race: "Uknown",
-          location: "Uknown",
+          race: "Unknown",
+          location: "Unknown",
         });
         await hunter.save();
         involved = hunter;
@@ -71,8 +71,8 @@ async function validateInvolved(
       if (!involved) {
         const merchant = new Merchant({
           name,
-          type: "Uknown",
-          location: "Uknown",
+          type: "Unknown",
+          location: "Unknown",
         });
         await merchant.save();
         involved = merchant;
@@ -97,7 +97,7 @@ async function validateInvolved(
  * @returns - Array of new goods and total value of the transaction
  * @throws - Error if there is an issue processing the goods
  */
-async function validateAndProcessGoods(
+export async function validateAndProcessGoods(
   goods: { name: string; amount: number }[],
   type: "Buy" | "Sell",
 ) {
@@ -118,8 +118,8 @@ async function validateAndProcessGoods(
         if (!good) {
           const newGood = new Good({
             name,
-            description: "Bien creado automáticamente",
-            material: "Desconocido",
+            description: "Good created automatically",
+            material: "Unknown",
             weight: 10,
             stock: amount,
             value: 100,

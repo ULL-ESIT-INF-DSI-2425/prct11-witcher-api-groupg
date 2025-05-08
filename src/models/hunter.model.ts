@@ -23,7 +23,7 @@ export interface HunterInterface extends Document {
     | "Barbarian"
     | "Cleric"
     | "Assassin"
-    | "Uknown";
+    | "Unknown";
   location: string;
 }
 
@@ -77,7 +77,7 @@ const HunterSchema = new Schema<HunterInterface>({
       "Barbarian",
       "Cleric",
       "Assassin",
-      "Uknown"
+      "Unknown"
     ],
   },
   location: {

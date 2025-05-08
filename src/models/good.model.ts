@@ -26,7 +26,7 @@ export interface GoodInterface extends Document {
     | "Bronze"
     | "Silver"
     | "Gold"
-    | "Uknowkn";
+    | "Unknown";
   weight: number;
   stock: number;
   value: number;
@@ -101,7 +101,7 @@ const GoodSchema = new Schema<GoodInterface>({
       "Bronze",
       "Silver",
       "Gold",
-      "Uknowkn",
+      "Unknown",
     ],
   },
   weight: {
