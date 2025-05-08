@@ -511,7 +511,7 @@ Elimina un mercader por su ID.
 ## 🔁 Transactions API
 
 ### **POST** `/transactions`
-De los bienes especificados se meterán en la transaccion los que existan o los que tengan stock, el resto se ignorarán, si no hay stock de ninguno o ninguno existe se mostrará un error
+De los bienes especificados se meterán en la transaccion los que existan o los que tengan stock, el resto se ignorarán, si no hay stock de ninguno o ninguno existe se mostrará un error.
 #### 🔸 Body:
 ```json
 {
@@ -532,7 +532,7 @@ De los bienes especificados se meterán en la transaccion los que existan o los 
 ```
 ---
 
-### **GET** `/transactions`
+### **GET** `/transactions?type=xxx`
 Obtiene todas las transacciones con filtros opcionales.
 
 ####🔸 Parámetros (opcionales):
@@ -545,7 +545,7 @@ Obtiene todas las transacciones con filtros opcionales.
 
 ---
 
-### **GET** `/transactions/by-name`
+### **GET** `/transactions/by-name?name=xxx`
 Obtiene transacciones filtradas por nombre del involucrado (Hunter/Merchants).
 
 🔸 Parámetros (opcionales):
@@ -560,7 +560,7 @@ Obtiene transacciones filtradas por nombre del involucrado (Hunter/Merchants).
 
 ---
 
-### GET /transactions/by-date
+### **GET** `/transactions/by-date?startDate=xxx&endDate=xxx&type=xxx`
 Obtiene transacciones filtradas por rango de fechas y tipo.
 
 🔸 Parámetros (requeridos):
@@ -581,7 +581,7 @@ Obtiene transacciones filtradas por rango de fechas y tipo.
 
 ---
 
-### GET /transactions/:id
+### **GET** `/transactions/:id`
 Obtiene una transacción por su ID.
 
 🔸 Parámetros:
@@ -596,7 +596,7 @@ Obtiene una transacción por su ID.
 
 ---
 
-### PATCH /transactions/:id
+### **PATCH** `/transactions/:id`
 Actualiza una transacción por su ID (modifica cantidades de bienes). Solo modifica la cantidad de bienes involucrados en la transacción si es posible.
 
 🔸 Parámetros:
@@ -629,7 +629,7 @@ Actualiza una transacción por su ID (modifica cantidades de bienes). Solo modif
 
 ---
 
-### DELETE /transactions/:id
+### **DELETE** `/transactions/:id`
 Elimina una transacción por su ID (revierte cambios en stock).
 
 🔸 Parámetros:
